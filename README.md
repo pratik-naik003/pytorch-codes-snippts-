@@ -668,3 +668,721 @@ Understanding tensors thoroughly is essential before moving on to neural network
 - Tensors are the foundation of all computations in PyTorch.
 
 ---
+
+> **Module 2 — Tensors (Part 1: Fundamentals)**
+
+# 📚 Table of Contents
+
+- The Story Behind Tensors
+- Why Do We Need Tensors?
+- What is a Tensor?
+- Tensor vs NumPy Array
+- Scalars, Vectors, Matrices and Tensors
+- Tensor Dimensions (Rank)
+- Tensor Shape
+- Number of Elements
+- Creating Your First Tensor
+- Tensor Data Types
+- Tensor Devices (CPU & GPU)
+- Tensor Properties
+- Summary
+- Practice Questions
+
+---
+
+# 📖 The Story Behind Tensors
+
+Before learning PyTorch, let's understand **why tensors exist**.
+
+Imagine you are building an AI model that recognizes cats in images.
+
+A computer doesn't understand images like humans do.
+
+When you open a picture like this:
+
+```
+🐱
+```
+
+You see a cat.
+
+But the computer actually sees something like this:
+
+```
+[[255, 120, 35],
+ [100,  90, 10],
+ [220, 150, 80],
+ ...
+]
+```
+
+These are **numbers** representing pixel values.
+
+Similarly,
+
+A sentence like
+
+```
+I love AI
+```
+
+becomes
+
+```
+[105, 2034, 501]
+```
+
+Audio becomes numbers.
+
+Videos become numbers.
+
+Medical scans become numbers.
+
+Everything inside Deep Learning eventually becomes **numbers**.
+
+The question is...
+
+**How do we efficiently store and manipulate millions (or even billions) of numbers?**
+
+The answer is:
+
+> **Tensor**
+
+---
+
+# Why Do We Need Tensors?
+
+Suppose you want to train an image classifier.
+
+Each image is
+
+```
+224 × 224 × 3
+```
+
+That means
+
+```
+224 × 224 × 3
+=
+150,528 numbers
+```
+
+If you train on
+
+```
+1000 images
+```
+
+you already have
+
+```
+150 Million+
+numbers
+```
+
+Performing operations on such large datasets using Python lists would be extremely slow.
+
+Tensors are optimized data structures that allow fast numerical computation, parallel execution, and GPU acceleration.
+
+---
+
+# What is a Tensor?
+
+A **Tensor** is the fundamental data structure in PyTorch.
+
+> **Definition:**  
+> A tensor is a multi-dimensional array capable of storing numerical data and performing high-performance mathematical operations on CPUs and GPUs.
+
+Think of tensors as the "containers" that hold data for machine learning models.
+
+Everything in PyTorch—inputs, outputs, weights, gradients, and predictions—is represented as tensors.
+
+---
+
+# Real-Life Analogy
+
+Imagine different ways of storing information:
+
+| Data | Representation |
+|-------|----------------|
+| Single temperature | Scalar |
+| List of marks | Vector |
+| Excel sheet | Matrix |
+| RGB Image | Tensor |
+| Video | Tensor |
+| LLM Training Data | Tensor |
+
+As the complexity of data increases, we move from simple numbers to higher-dimensional tensors.
+
+---
+
+# Scalars, Vectors, Matrices and Tensors
+
+## Scalar (0D Tensor)
+
+A single value.
+
+Example:
+
+```
+7
+```
+
+Temperature
+
+```
+32°C
+```
+
+Age
+
+```
+21
+```
+
+Python
+
+```python
+import torch
+
+scalar = torch.tensor(7)
+
+print(scalar)
+```
+
+Output
+
+```
+tensor(7)
+```
+
+---
+
+## Vector (1D Tensor)
+
+A collection of numbers.
+
+Example
+
+```
+[10,20,30,40]
+```
+
+Python
+
+```python
+vector = torch.tensor([10,20,30,40])
+
+print(vector)
+```
+
+Output
+
+```
+tensor([10,20,30,40])
+```
+
+---
+
+## Matrix (2D Tensor)
+
+Rows and Columns.
+
+Example
+
+```
+[
+ [1,2,3],
+ [4,5,6]
+]
+```
+
+Python
+
+```python
+matrix = torch.tensor([
+    [1,2,3],
+    [4,5,6]
+])
+
+print(matrix)
+```
+
+Output
+
+```
+tensor([[1,2,3],
+        [4,5,6]])
+```
+
+---
+
+## 3D Tensor
+
+Imagine stacking multiple matrices.
+
+```
+[
+ Matrix1
+
+ Matrix2
+
+ Matrix3
+]
+```
+
+Example:
+
+```
+RGB Image
+
+Height
+
+Width
+
+Channels
+```
+
+---
+
+## 4D Tensor
+
+Most Deep Learning models use 4D tensors.
+
+Example
+
+```
+Batch Size
+
+Height
+
+Width
+
+Channels
+```
+
+or
+
+```
+Batch
+
+Channel
+
+Height
+
+Width
+```
+
+---
+
+# Visual Representation
+
+```
+Scalar
+
+7
+```
+
+↓
+
+```
+Vector
+
+[1 2 3]
+```
+
+↓
+
+```
+Matrix
+
+1 2 3
+
+4 5 6
+```
+
+↓
+
+```
+Tensor
+
+Matrix
+
+Matrix
+
+Matrix
+```
+
+---
+
+# Tensor Dimensions (Rank)
+
+Dimension tells us **how many axes** a tensor has.
+
+| Tensor | Rank |
+|----------|------|
+| Scalar | 0 |
+| Vector | 1 |
+| Matrix | 2 |
+| Image | 3 |
+| Batch of Images | 4 |
+
+Example
+
+```python
+scalar = torch.tensor(5)
+
+print(scalar.ndim)
+```
+
+Output
+
+```
+0
+```
+
+---
+
+Vector
+
+```python
+vector = torch.tensor([1,2,3])
+
+print(vector.ndim)
+```
+
+Output
+
+```
+1
+```
+
+---
+
+Matrix
+
+```python
+matrix = torch.tensor([
+    [1,2],
+    [3,4]
+])
+
+print(matrix.ndim)
+```
+
+Output
+
+```
+2
+```
+
+---
+
+# Tensor Shape
+
+Shape tells us
+
+> **How many elements exist along each dimension.**
+
+Example
+
+```python
+matrix = torch.tensor([
+    [1,2,3],
+    [4,5,6]
+])
+```
+
+Shape
+
+```
+(2,3)
+```
+
+Meaning
+
+```
+2 Rows
+
+3 Columns
+```
+
+Python
+
+```python
+print(matrix.shape)
+```
+
+Output
+
+```
+torch.Size([2,3])
+```
+
+---
+
+Another Example
+
+```python
+image = torch.rand(3,224,224)
+
+print(image.shape)
+```
+
+Output
+
+```
+torch.Size([3,224,224])
+```
+
+Meaning
+
+```
+Channels
+
+Height
+
+Width
+```
+
+---
+
+# Number of Elements
+
+Sometimes we need to know how many values exist inside a tensor.
+
+PyTorch provides
+
+```python
+numel()
+```
+
+Example
+
+```python
+matrix = torch.tensor([
+    [1,2,3],
+    [4,5,6]
+])
+
+print(matrix.numel())
+```
+
+Output
+
+```
+6
+```
+
+Because
+
+```
+2 × 3 = 6
+```
+
+---
+
+# Creating Your First Tensor
+
+The simplest way to create a tensor is using
+
+```python
+torch.tensor()
+```
+
+Example
+
+```python
+import torch
+
+numbers = torch.tensor([10,20,30])
+
+print(numbers)
+```
+
+Output
+
+```
+tensor([10,20,30])
+```
+
+---
+
+Matrix Example
+
+```python
+marks = torch.tensor([
+    [80,90],
+    [70,95]
+])
+
+print(marks)
+```
+
+Output
+
+```
+tensor([[80,90],
+        [70,95]])
+```
+
+---
+
+# Tensor Data Types
+
+Every tensor stores data of a specific type.
+
+Common data types:
+
+| Data Type | Description |
+|------------|-------------|
+| torch.int8 | 8-bit Integer |
+| torch.int32 | 32-bit Integer |
+| torch.int64 | 64-bit Integer |
+| torch.float16 | Half Precision Float |
+| torch.float32 | Standard Float |
+| torch.float64 | Double Precision Float |
+| torch.bool | Boolean |
+
+Check the datatype
+
+```python
+x = torch.tensor([1,2,3])
+
+print(x.dtype)
+```
+
+Output
+
+```
+torch.int64
+```
+
+---
+
+# Tensor Device
+
+Every tensor lives on a device.
+
+Possible devices:
+
+- CPU
+- GPU
+
+Check device
+
+```python
+x = torch.tensor([1,2,3])
+
+print(x.device)
+```
+
+Output
+
+```
+cpu
+```
+
+If moved to GPU
+
+```
+cuda:0
+```
+
+---
+
+# Tensor Properties
+
+Useful properties:
+
+```python
+x = torch.rand(3,4)
+```
+
+Shape
+
+```python
+x.shape
+```
+
+Dimensions
+
+```python
+x.ndim
+```
+
+Datatype
+
+```python
+x.dtype
+```
+
+Device
+
+```python
+x.device
+```
+
+Number of Elements
+
+```python
+x.numel()
+```
+
+Size
+
+```python
+x.size()
+```
+
+These properties are frequently used when debugging models.
+
+---
+
+# Summary
+
+In this chapter, you learned:
+
+- Why tensors are essential in deep learning.
+- The difference between scalars, vectors, matrices, and higher-dimensional tensors.
+- How tensor dimensions (rank) describe the number of axes.
+- How tensor shapes specify the size of each dimension.
+- How to create tensors using `torch.tensor()`.
+- How to inspect tensor properties such as shape, data type, device, and number of elements.
+
+Tensors are the foundation of every PyTorch program. Before building neural networks, it's important to become comfortable creating and inspecting them.
+
+---
+
+# 📝 Practice Questions
+
+1. What is a tensor?
+2. Why are tensors preferred over Python lists for deep learning?
+3. Explain the difference between a scalar, vector, matrix, and tensor.
+4. What is the rank (dimension) of a tensor?
+5. What is the difference between `shape` and `numel()`?
+6. How do you create a tensor in PyTorch?
+7. How do you check the datatype of a tensor?
+8. How do you check whether a tensor is on the CPU or GPU?
+9. What does `ndim` return?
+10. What does `torch.Size([3, 224, 224])` represent?
+
+---
+
+# 🚀 What's Next?
+
+In **Module 2 – Part 2**, you'll learn how to create tensors using PyTorch factory functions, including:
+
+- `torch.zeros()`
+- `torch.ones()`
+- `torch.empty()`
+- `torch.rand()`
+- `torch.randn()`
+- `torch.randint()`
+- `torch.arange()`
+- `torch.linspace()`
+- `torch.eye()`
+- `torch.full()`
+
+You'll also understand when to use each function in real-world machine learning and LLM workflows.
