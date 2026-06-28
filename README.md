@@ -3648,3 +3648,1632 @@ next(model.parameters()).device
 8. What is device-independent programming?
 
 ---
+
+# Module 3 – Part 4
+
+# Mixed Precision Training (FP32, FP16, BF16)
+
+# 📚 Table of Contents
+
+- Introduction
+- What is Precision?
+- Why Precision Matters
+- Floating Point Numbers
+- FP32
+- FP16
+- BF16
+- Integer Precision
+- Memory Comparison
+- Speed Comparison
+- Tensor Cores
+- Mixed Precision
+- Automatic Mixed Precision (AMP)
+- Advantages
+- Limitations
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# Story
+
+Imagine you are training
+
+```
+Llama 3
+
+7 Billion Parameters
+```
+
+Every parameter is stored inside memory.
+
+Suppose each parameter takes
+
+```
+4 Bytes
+```
+
+Then
+
+```
+7 Billion × 4
+
+≈ 28 GB
+```
+
+Only the weights require around **28 GB**.
+
+Now remember,
+
+during training we also store
+
+- Gradients
+- Activations
+- Optimizer States
+
+Memory usage easily becomes
+
+```
+60–80 GB
+```
+
+Most consumer GPUs have
+
+```
+8 GB
+
+12 GB
+
+16 GB
+```
+
+How can we train such large models?
+
+The answer is
+
+> **Mixed Precision Training**
+
+---
+
+# What is Precision?
+
+Precision means
+
+> **How accurately a number is stored inside memory.**
+
+Example
+
+```
+3
+```
+
+Simple Integer.
+
+Now
+
+```
+3.1415926535
+```
+
+This decimal number needs more memory.
+
+Higher precision
+
+↓
+
+More memory
+
+↓
+
+More computation
+
+---
+
+# Floating Point Numbers
+
+Computers store decimal numbers using
+
+```
+Floating Point Representation
+```
+
+General Format
+
+```
+Sign
+
+Exponent
+
+Mantissa
+```
+
+```
++------------+-----------+------------+
+| Sign Bit   | Exponent  | Mantissa   |
++------------+-----------+------------+
+```
+
+These three parts determine
+
+- Positive/Negative
+- Scale
+- Accuracy
+
+---
+
+# Types of Precision
+
+Deep Learning mainly uses
+
+```
+FP64
+
+↓
+
+FP32
+
+↓
+
+FP16
+
+↓
+
+BF16
+```
+
+Sometimes
+
+```
+INT8
+
+INT4
+```
+
+for inference.
+
+---
+
+# FP64 (Double Precision)
+
+Memory
+
+```
+64 Bits
+
+=
+
+8 Bytes
+```
+
+Advantages
+
+- Very High Precision
+- Scientific Computing
+
+Disadvantages
+
+- Slow
+- High Memory Usage
+
+Rarely used in Deep Learning.
+
+---
+
+# FP32 (Single Precision)
+
+Memory
+
+```
+32 Bits
+
+=
+
+4 Bytes
+```
+
+Structure
+
+```
+1 Bit
+
+Sign
+
+8 Bits
+
+Exponent
+
+23 Bits
+
+Mantissa
+```
+
+Advantages
+
+- High Accuracy
+- Stable Training
+- Standard Format
+
+Disadvantages
+
+- Uses More Memory
+
+Most traditional Deep Learning models were trained using FP32.
+
+---
+
+# FP16 (Half Precision)
+
+Memory
+
+```
+16 Bits
+
+=
+
+2 Bytes
+```
+
+Structure
+
+```
+1 Bit
+
+Sign
+
+5 Bits
+
+Exponent
+
+10 Bits
+
+Mantissa
+```
+
+Advantages
+
+✅ Half Memory
+
+✅ Faster GPU Computation
+
+✅ More Data Fits in VRAM
+
+Disadvantages
+
+❌ Smaller Number Range
+
+❌ Numerical Overflow
+
+❌ Numerical Underflow
+
+---
+
+# BF16 (Brain Floating Point)
+
+Developed by
+
+```
+Google
+```
+
+Memory
+
+```
+16 Bits
+```
+
+Structure
+
+```
+1 Bit
+
+Sign
+
+8 Bits
+
+Exponent
+
+7 Bits
+
+Mantissa
+```
+
+Notice
+
+Exponent is same as FP32.
+
+This means
+
+BF16 can represent
+
+very small
+
+and
+
+very large
+
+numbers much better than FP16.
+
+---
+
+# FP16 vs BF16
+
+| Feature | FP16 | BF16 |
+|----------|------|-------|
+| Bits | 16 |16|
+| Memory |2 Bytes|2 Bytes|
+| Speed |Fast|Fast|
+| Numerical Stability|Medium|High|
+| Used in LLMs|Yes|Yes|
+| Overflow Risk|Higher|Lower|
+
+Modern LLM training prefers
+
+```
+BF16
+```
+
+whenever supported.
+
+---
+
+# Memory Comparison
+
+Suppose
+
+```
+1 Billion Parameters
+```
+
+### FP32
+
+```
+1B × 4
+
+=
+
+4 GB
+```
+
+---
+
+### FP16
+
+```
+1B × 2
+
+=
+
+2 GB
+```
+
+---
+
+### BF16
+
+```
+1B × 2
+
+=
+
+2 GB
+```
+
+Immediately
+
+Memory becomes
+
+```
+50%
+
+Less
+```
+
+---
+
+# Speed Comparison
+
+| Precision | Speed |
+|-----------|--------|
+| FP64 | Slowest |
+| FP32 | Standard |
+| FP16 | Faster |
+| BF16 | Faster |
+
+Modern GPUs
+
+```
+RTX
+
+A100
+
+H100
+
+L40
+
+H200
+```
+
+contain hardware specially optimized for FP16/BF16.
+
+---
+
+# Why FP16 is Faster
+
+Smaller numbers
+
+↓
+
+Less Memory Transfer
+
+↓
+
+Higher Throughput
+
+↓
+
+More Parallel Operations
+
+↓
+
+Faster Training
+
+Memory bandwidth is often the bottleneck in deep learning, so reducing the amount of data transferred speeds up computation.
+
+---
+
+# Tensor Cores
+
+Modern NVIDIA GPUs contain
+
+```
+Tensor Cores
+```
+
+These are specialized hardware units designed specifically for matrix multiplication.
+
+Normal CUDA Core
+
+```
+General Computation
+```
+
+Tensor Core
+
+```
+Matrix Multiplication
+
+Deep Learning
+```
+
+Tensor Cores achieve their best performance using
+
+- FP16
+- BF16
+- TF32
+
+---
+
+# What is Mixed Precision?
+
+Instead of training entirely in FP32,
+
+we combine
+
+```
+FP16
+
++
+
+FP32
+```
+
+or
+
+```
+BF16
+
++
+
+FP32
+```
+
+Hence the name
+
+```
+Mixed Precision
+```
+
+---
+
+# Basic Idea
+
+Some operations require
+
+```
+High Accuracy
+```
+
+Others only require
+
+```
+High Speed
+```
+
+So
+
+```
+Forward Pass
+
+↓
+
+FP16
+
+↓
+
+Backward Pass
+
+↓
+
+FP16
+
+↓
+
+Weight Update
+
+↓
+
+FP32
+```
+
+Master weights are typically kept in FP32 for numerical stability while many computations run in FP16 or BF16.
+
+---
+
+# Automatic Mixed Precision (AMP)
+
+PyTorch provides
+
+```python
+torch.autocast()
+```
+
+which automatically chooses the appropriate precision for many operations.
+
+Example
+
+```python
+with torch.autocast(device_type="cuda"):
+
+    output = model(images)
+
+    loss = criterion(output, labels)
+```
+
+You don't need to manually convert every tensor.
+
+---
+
+# Gradient Scaling
+
+Small FP16 values can become
+
+```
+0
+```
+
+This problem is called
+
+```
+Gradient Underflow
+```
+
+PyTorch solves this using
+
+```python
+GradScaler
+```
+
+which scales gradients during training and rescales them before updating the weights.
+
+---
+
+# Advantages of Mixed Precision
+
+✅ Faster Training
+
+✅ Less GPU Memory
+
+✅ Larger Batch Sizes
+
+✅ Lower VRAM Usage
+
+✅ Better GPU Utilization
+
+✅ Essential for Large Language Models
+
+---
+
+# Limitations
+
+❌ Some operations still require FP32
+
+❌ Older GPUs may not benefit significantly
+
+❌ Numerical instability can occur without proper scaling
+
+---
+
+# Real World Usage
+
+Mixed Precision is widely used in:
+
+- Llama
+- Gemma
+- Qwen
+- DeepSeek
+- Mistral
+- Stable Diffusion
+- Vision Transformers (ViT)
+- CNNs such as ResNet and EfficientNet
+
+It is considered a standard optimization in modern deep learning.
+
+---
+
+# Precision Summary
+
+| Precision | Bits | Bytes | Speed | Memory | Typical Use |
+|------------|------|-------|-------|--------|-------------|
+| FP64 |64|8|Slow|High|Scientific Computing|
+| FP32 |32|4|Normal|Medium|Standard Training|
+| FP16 |16|2|Fast|Low|Mixed Precision Training|
+| BF16 |16|2|Fast|Low|Modern LLM Training|
+| INT8 |8|1|Very Fast|Very Low|Inference|
+| INT4 |4|0.5|Extremely Fast|Lowest|Quantized LLMs|
+
+---
+
+# Key Takeaways
+
+- Precision determines how numbers are represented in memory.
+- Lower precision reduces memory consumption and increases throughput.
+- FP32 offers high numerical accuracy and remains the baseline.
+- FP16 halves memory usage but has a smaller representable range.
+- BF16 keeps the wide exponent range of FP32 while using only 16 bits.
+- Tensor Cores are optimized for FP16 and BF16 operations.
+- Mixed Precision combines speed and stability by using multiple precisions during training.
+- Automatic Mixed Precision (AMP) in PyTorch simplifies this process.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is floating point precision?
+2. Why is FP16 faster than FP32?
+3. Difference between FP16 and BF16?
+4. Why is BF16 preferred for many LLMs?
+5. What is Mixed Precision Training?
+6. What are Tensor Cores?
+7. Why do we still keep some values in FP32?
+8. What is Gradient Underflow?
+9. What is `torch.autocast()`?
+10. Why is Mixed Precision important for training billion-parameter models?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Calculate the memory required for a model with **500 million parameters** using:
+
+- FP32
+- FP16
+- BF16
+
+---
+
+### Exercise 2
+
+Research whether your GPU supports
+
+- FP16
+- BF16
+- Tensor Cores
+
+---
+
+### Exercise 3
+
+Why would FP64 generally be a poor choice for training a large language model?
+
+
+
+# Module 3 – Part 5
+
+# Device Management & Best Practices
+
+
+# 📚 Table of Contents
+
+- Introduction
+- What is Device Management?
+- Why Device Management Matters
+- CPU vs GPU Memory
+- Device Objects
+- Checking Available Devices
+- Device Independent Programming
+- Moving Tensors
+- Moving Models
+- Device Synchronization
+- Multiple GPUs
+- Device Mismatch Errors
+- Memory Management
+- CUDA Cache
+- Performance Tips
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you trained a CNN on your laptop.
+
+Everything works perfectly.
+
+Now you upload the same project to
+
+```
+AWS
+
+↓
+
+RunPod
+
+↓
+
+Google Colab
+
+↓
+
+Kaggle
+```
+
+Suddenly your program crashes.
+
+Error
+
+```
+Expected all tensors to be on the same device.
+```
+
+or
+
+```
+CUDA not available.
+```
+
+or
+
+```
+CUDA Out Of Memory.
+```
+
+The problem isn't your model.
+
+The problem is **Device Management**.
+
+A good PyTorch developer never writes code only for one machine.
+
+They write code that runs on
+
+- CPU
+- Single GPU
+- Multiple GPUs
+- Cloud Servers
+
+without changing the source code.
+
+---
+
+# What is Device Management?
+
+Device Management means
+
+> Managing where tensors and models are stored and where computations are executed.
+
+Possible devices
+
+```
+CPU
+
+GPU
+
+Multiple GPUs
+```
+
+PyTorch gives complete control over device placement.
+
+---
+
+# Device Hierarchy
+
+```
+Computer
+
+│
+
+├── CPU
+
+│
+
+└── GPU
+
+     │
+
+     ├── cuda:0
+
+     ├── cuda:1
+
+     ├── cuda:2
+
+     └── cuda:3
+```
+
+Large servers often contain
+
+```
+4
+
+8
+
+16
+
+GPUs
+```
+
+---
+
+# Creating a Device
+
+Always create one global device object.
+
+```python
+import torch
+
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+```
+
+Never hardcode
+
+```python
+device = "cuda"
+```
+
+because your code will fail on systems without a GPU.
+
+---
+
+# Checking Current Device
+
+```python
+print(device)
+```
+
+Output
+
+```
+cuda
+```
+
+or
+
+```
+cpu
+```
+
+---
+
+# Number of GPUs
+
+```python
+torch.cuda.device_count()
+```
+
+Example
+
+```
+2
+```
+
+Meaning
+
+```
+cuda:0
+
+cuda:1
+```
+
+---
+
+# Current GPU
+
+```python
+torch.cuda.current_device()
+```
+
+Output
+
+```
+0
+```
+
+---
+
+# GPU Name
+
+```python
+torch.cuda.get_device_name(0)
+```
+
+Output
+
+```
+NVIDIA RTX 4060
+```
+
+---
+
+# Tensor Placement
+
+CPU Tensor
+
+```python
+x = torch.tensor([1,2,3])
+```
+
+Move
+
+```python
+x = x.to(device)
+```
+
+Now
+
+```
+CPU
+
+↓
+
+GPU
+```
+
+---
+
+# Model Placement
+
+Every model has parameters.
+
+Those parameters also live on a device.
+
+```python
+model = MyModel()
+
+model = model.to(device)
+```
+
+Now every layer moves automatically.
+
+---
+
+# Data Loader
+
+Inside training
+
+Always move
+
+```
+Images
+
+Labels
+```
+
+Example
+
+```python
+for images, labels in train_loader:
+
+    images = images.to(device)
+
+    labels = labels.to(device)
+```
+
+---
+
+# Complete Workflow
+
+```
+Dataset
+
+↓
+
+DataLoader
+
+↓
+
+Tensor
+
+↓
+
+GPU
+
+↓
+
+Model
+
+↓
+
+Prediction
+
+↓
+
+Loss
+
+↓
+
+Backward
+
+↓
+
+Optimizer
+```
+
+---
+
+# Device Independent Programming
+
+Good Code
+
+```python
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+```
+
+Bad Code
+
+```python
+device="cuda"
+```
+
+Reason
+
+Some users don't have GPUs.
+
+---
+
+# Why is .to(device) Preferred?
+
+Instead of
+
+```python
+.cuda()
+```
+
+PyTorch recommends
+
+```python
+.to(device)
+```
+
+Advantages
+
+- Cleaner
+- Portable
+- CPU Compatible
+- Cloud Compatible
+
+---
+
+# Checking Tensor Device
+
+```python
+print(x.device)
+```
+
+Output
+
+```
+cuda:0
+```
+
+---
+
+# Checking Model Device
+
+```python
+next(model.parameters()).device
+```
+
+Useful for debugging.
+
+---
+
+# Device Mismatch Error
+
+Most Common Error
+
+```
+Expected all tensors to be on the same device.
+```
+
+Example
+
+```
+Tensor
+
+↓
+
+GPU
+
+Model
+
+↓
+
+CPU
+```
+
+PyTorch cannot perform computation across different devices.
+
+---
+
+# Wrong Code
+
+```python
+images = images.cuda()
+
+outputs = model(images)
+```
+
+Model
+
+```
+CPU
+```
+
+Images
+
+```
+GPU
+```
+
+Runtime Error.
+
+---
+
+# Correct Code
+
+```python
+model = model.to(device)
+
+images = images.to(device)
+
+labels = labels.to(device)
+```
+
+Everything lives on
+
+```
+Same Device
+```
+
+---
+
+# CUDA Synchronization
+
+GPU operations are asynchronous.
+
+This means
+
+```
+Python
+
+↓
+
+Continues
+
+↓
+
+GPU Still Working
+```
+
+Sometimes we need to wait.
+
+```python
+torch.cuda.synchronize()
+```
+
+Useful while
+
+- Benchmarking
+- Measuring Time
+
+---
+
+# GPU Memory
+
+Every GPU has
+
+```
+VRAM
+```
+
+Used for
+
+- Tensors
+- Model Weights
+- Gradients
+- Optimizer States
+- Activations
+
+---
+
+# Memory Usage
+
+Current Memory
+
+```python
+torch.cuda.memory_allocated()
+```
+
+Reserved Memory
+
+```python
+torch.cuda.memory_reserved()
+```
+
+Maximum Memory
+
+```python
+torch.cuda.max_memory_allocated()
+```
+
+These functions help monitor VRAM usage during training.
+
+---
+
+# Clearing Cache
+
+Sometimes memory isn't immediately released.
+
+PyTorch caches memory for faster reuse.
+
+You can clear unused cached memory with
+
+```python
+torch.cuda.empty_cache()
+```
+
+> Note: This clears cached memory, not memory currently used by active tensors.
+
+---
+
+# Out of Memory (OOM)
+
+Example
+
+```
+CUDA Out Of Memory
+```
+
+Reasons
+
+- Batch size too large
+- Model too large
+- Memory leak
+- Multiple programs using GPU
+
+---
+
+# Fix OOM
+
+✅ Reduce Batch Size
+
+✅ Use FP16
+
+✅ Use BF16
+
+✅ Gradient Accumulation
+
+✅ Gradient Checkpointing
+
+✅ Close other GPU applications
+
+---
+
+# Monitoring GPU
+
+Terminal
+
+```bash
+nvidia-smi
+```
+
+Shows
+
+- GPU Usage
+- Temperature
+- VRAM
+- Running Processes
+- Power Usage
+
+Useful while training.
+
+---
+
+# Multiple GPUs
+
+Example
+
+```
+cuda:0
+
+cuda:1
+
+cuda:2
+
+cuda:3
+```
+
+PyTorch supports
+
+- Data Parallel
+- Distributed Data Parallel (DDP)
+
+DDP is the recommended approach for modern large-scale training.
+
+---
+
+# Good Training Loop
+
+```python
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+
+model = MyModel().to(device)
+
+for images, labels in train_loader:
+
+    images = images.to(device)
+
+    labels = labels.to(device)
+
+    optimizer.zero_grad()
+
+    outputs = model(images)
+
+    loss = criterion(outputs, labels)
+
+    loss.backward()
+
+    optimizer.step()
+```
+
+This pattern is used in most PyTorch projects.
+
+---
+
+# Best Practices
+
+✅ Create one global device object.
+
+---
+
+✅ Move model once.
+
+---
+
+✅ Move data inside training loop.
+
+---
+
+✅ Use `.to(device)`.
+
+---
+
+✅ Monitor GPU memory.
+
+---
+
+✅ Use Mixed Precision whenever possible.
+
+---
+
+✅ Keep tensors on same device.
+
+---
+
+# Common Mistakes
+
+❌ Hardcoding
+
+```python
+device="cuda"
+```
+
+---
+
+❌ Forgetting
+
+```python
+model.to(device)
+```
+
+---
+
+❌ Labels on CPU.
+
+---
+
+❌ Calling
+
+```python
+.to(device)
+```
+
+inside every operation unnecessarily.
+
+---
+
+❌ Ignoring GPU memory usage.
+
+---
+
+# Real World Example
+
+Fine Tuning Llama
+
+```
+Dataset
+
+↓
+
+Tokenizer
+
+↓
+
+Input IDs
+
+↓
+
+GPU
+
+↓
+
+Llama Model
+
+↓
+
+GPU
+
+↓
+
+Loss
+
+↓
+
+Backward
+
+↓
+
+Optimizer
+
+↓
+
+Save Checkpoint
+```
+
+Everything remains on the GPU for efficient training.
+
+---
+
+# Cheat Sheet
+
+| Task | Function |
+|------|----------|
+| Current Device | `torch.cuda.current_device()` |
+| GPU Name | `torch.cuda.get_device_name(0)` |
+| GPU Count | `torch.cuda.device_count()` |
+| CUDA Available | `torch.cuda.is_available()` |
+| Move Tensor | `.to(device)` |
+| Move Model | `model.to(device)` |
+| CPU | `.cpu()` |
+| GPU | `.cuda()` |
+| Clear Cache | `torch.cuda.empty_cache()` |
+| Sync GPU | `torch.cuda.synchronize()` |
+
+---
+
+# Summary
+
+In this chapter, you learned:
+
+- What device management is.
+- How to create and use a `torch.device`.
+- How to move tensors and models between CPU and GPU.
+- How to write device-independent PyTorch code.
+- How to monitor and manage GPU memory.
+- Common CUDA errors and how to resolve them.
+- Best practices for writing efficient and portable training code.
+
+Mastering device management is essential for building reliable PyTorch applications that run seamlessly on local machines, cloud GPUs, and production servers.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is device management in PyTorch?
+2. Why should you use `torch.device()` instead of hardcoding `"cuda"`?
+3. What causes the "Expected all tensors to be on the same device" error?
+4. How do you move a model to the GPU?
+5. What is the difference between `.cuda()` and `.to(device)`?
+6. What does `torch.cuda.empty_cache()` do?
+7. How can you check current GPU memory usage?
+8. Why are GPU operations asynchronous?
+9. How do you monitor GPU usage while training?
+10. What is the recommended approach for multi-GPU training?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a tensor on the CPU and move it to the GPU.
+
+---
+
+### Exercise 2
+
+Print your GPU name and CUDA version.
+
+---
+
+### Exercise 3
+
+Create a neural network and move it to the selected device.
+
+---
+
+### Exercise 4
+
+Print the device of the first model parameter.
+
+---
+
+### Exercise 5
+
+Run `nvidia-smi` while training a model and observe:
+
+- GPU utilization
+- Memory usage
+- Temperature
+
+---
