@@ -7647,3 +7647,4387 @@ Train a simple Linear Regression model using MSELoss.
 Train a binary classifier using BCEWithLogitsLoss.
 
 ---
+
+# Module 7 – Optimizers (`torch.optim`)
+
+> **Goal:** Learn how neural networks update their weights using optimization algorithms and understand the most commonly used optimizers in PyTorch.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is an Optimizer?
+- Why Do We Need Optimizers?
+- Gradient Descent
+- Types of Gradient Descent
+- Learning Rate
+- SGD
+- Momentum
+- RMSProp
+- Adam
+- AdamW
+- Weight Decay
+- Choosing an Optimizer
+- Complete Training Loop
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you're standing on the top of a mountain.
+
+Your goal is to reach the lowest point.
+
+But there's one problem...
+
+You are blindfolded.
+
+You cannot see the valley.
+
+The only information you have is
+
+```
+Which direction is downhill?
+```
+
+Every small step you take brings you closer to the bottom.
+
+This is exactly how neural networks learn.
+
+Instead of climbing a mountain,
+
+they are trying to minimize a **Loss Function**.
+
+The optimizer acts as the guide.
+
+It tells the model
+
+> **"Move your weights in this direction to reduce the loss."**
+
+---
+
+# What is an Optimizer?
+
+An **Optimizer** is an algorithm that updates the model's parameters (weights and biases) using the gradients calculated during backpropagation.
+
+Simple Workflow
+
+```text
+Input
+
+↓
+
+Prediction
+
+↓
+
+Loss
+
+↓
+
+Backward()
+
+↓
+
+Gradients
+
+↓
+
+Optimizer
+
+↓
+
+Updated Weights
+```
+
+Without an optimizer, the model cannot improve.
+
+---
+
+# Why Do We Need an Optimizer?
+
+Suppose your model predicts
+
+```
+Prediction = 120
+
+Actual = 100
+```
+
+Loss
+
+```
+20
+```
+
+Autograd computes the gradient.
+
+But...
+
+Who changes the weights?
+
+The answer is
+
+```
+Optimizer
+```
+
+---
+
+# Gradient Descent
+
+The most fundamental optimization algorithm.
+
+Goal
+
+```
+Reduce Loss
+```
+
+Formula
+
+\[
+W_{new}=W_{old}-LearningRate \times Gradient
+\]
+
+Meaning
+
+```
+New Weight
+
+=
+
+Old Weight
+
+-
+
+Small Step
+```
+
+---
+
+# Visual Representation
+
+```
+Loss
+
+↑
+
+|
+
+|        •
+
+|      •
+
+|    •
+
+|  •
+
+|•
+
++--------------------→ Weight
+```
+
+Each optimizer step moves closer to the minimum.
+
+---
+
+# Types of Gradient Descent
+
+### 1. Batch Gradient Descent
+
+Uses the **entire dataset** before updating weights.
+
+Advantages
+
+- Stable
+
+Disadvantages
+
+- Slow
+
+---
+
+### 2. Stochastic Gradient Descent (SGD)
+
+Uses **one training sample** at a time.
+
+Advantages
+
+- Fast
+
+Disadvantages
+
+- Noisy updates
+
+---
+
+### 3. Mini-Batch Gradient Descent
+
+Uses a **small batch** of samples.
+
+Example
+
+```
+Batch Size = 32
+```
+
+Most Deep Learning models use Mini-Batch Gradient Descent.
+
+---
+
+# Learning Rate
+
+Learning Rate determines
+
+> **How large each optimization step should be.**
+
+Notation
+
+```
+lr
+```
+
+Example
+
+```python
+lr = 0.001
+```
+
+---
+
+# Choosing Learning Rate
+
+Too Small
+
+```
+Very Slow Training
+```
+
+Too Large
+
+```
+Training becomes unstable
+
+Loss may increase
+
+Model may never converge
+```
+
+Good Learning Rate
+
+```
+Fast
+
+Stable
+```
+
+---
+
+# Stochastic Gradient Descent (SGD)
+
+Most basic optimizer.
+
+PyTorch
+
+```python
+import torch.optim as optim
+
+optimizer = optim.SGD(
+    model.parameters(),
+    lr=0.01
+)
+```
+
+Advantages
+
+- Simple
+- Less Memory
+- Easy to Understand
+
+Disadvantages
+
+- Can converge slowly
+- May get stuck in local minima
+
+---
+
+# SGD with Momentum
+
+Momentum helps the optimizer maintain direction and reduces oscillations.
+
+Analogy
+
+Imagine pushing a heavy ball downhill.
+
+The ball gains momentum and rolls more smoothly.
+
+PyTorch
+
+```python
+optimizer = optim.SGD(
+    model.parameters(),
+    lr=0.01,
+    momentum=0.9
+)
+```
+
+Advantages
+
+- Faster convergence
+- Smoother updates
+- Escapes shallow local minima more easily
+
+---
+
+# RMSProp
+
+RMSProp adjusts the learning rate for each parameter individually.
+
+Idea
+
+```
+Frequently changing weights
+
+↓
+
+Smaller updates
+
+Less changing weights
+
+↓
+
+Larger updates
+```
+
+PyTorch
+
+```python
+optimizer = optim.RMSprop(
+    model.parameters(),
+    lr=0.001
+)
+```
+
+Used in
+
+- RNNs
+- LSTMs
+- Reinforcement Learning
+
+---
+
+# Adam Optimizer
+
+Adam stands for
+
+```
+Adaptive Moment Estimation
+```
+
+Adam combines ideas from
+
+- Momentum
+- RMSProp
+
+It is the default optimizer for many deep learning projects.
+
+PyTorch
+
+```python
+optimizer = optim.Adam(
+    model.parameters(),
+    lr=0.001
+)
+```
+
+Advantages
+
+✅ Fast
+
+✅ Stable
+
+✅ Works well for most problems
+
+---
+
+# AdamW Optimizer
+
+AdamW is an improved version of Adam.
+
+Main Difference
+
+```
+Adam
+
+↓
+
+Weight Decay implemented differently
+
+↓
+
+Better Regularization
+```
+
+PyTorch
+
+```python
+optimizer = optim.AdamW(
+    model.parameters(),
+    lr=0.001
+)
+```
+
+Used in
+
+- BERT
+- GPT
+- Llama
+- Gemma
+- Qwen
+- Vision Transformers
+
+Today, AdamW is the standard optimizer for training Transformer models.
+
+---
+
+# Weight Decay
+
+Weight Decay is a regularization technique.
+
+Purpose
+
+Prevent the model from becoming too complex.
+
+PyTorch
+
+```python
+optimizer = optim.AdamW(
+
+    model.parameters(),
+
+    lr=0.001,
+
+    weight_decay=0.01
+)
+```
+
+Benefits
+
+- Reduces Overfitting
+- Better Generalization
+
+---
+
+# Optimizer Comparison
+
+| Optimizer | Speed | Memory | Common Use |
+|------------|--------|---------|------------|
+| SGD | Medium | Low | CNNs |
+| SGD + Momentum | Fast | Low | CNNs |
+| RMSProp | Fast | Medium | RNNs |
+| Adam | Very Fast | Medium | General DL |
+| AdamW | Very Fast | Medium | Transformers & LLMs |
+
+---
+
+# Creating an Optimizer
+
+```python
+import torch.optim as optim
+
+optimizer = optim.Adam(
+
+    model.parameters(),
+
+    lr=0.001
+)
+```
+
+---
+
+# What is `model.parameters()`?
+
+Every neural network contains trainable weights.
+
+Example
+
+```python
+for param in model.parameters():
+
+    print(param.shape)
+```
+
+The optimizer receives these parameters and updates them after every backward pass.
+
+---
+
+# Optimizer Workflow
+
+```
+Input
+
+↓
+
+Forward Pass
+
+↓
+
+Prediction
+
+↓
+
+Loss
+
+↓
+
+loss.backward()
+
+↓
+
+Gradients
+
+↓
+
+optimizer.step()
+
+↓
+
+Updated Weights
+```
+
+---
+
+# Complete Training Example
+
+```python
+for images, labels in train_loader:
+
+    optimizer.zero_grad()
+
+    outputs = model(images)
+
+    loss = criterion(outputs, labels)
+
+    loss.backward()
+
+    optimizer.step()
+```
+
+This is the standard training loop in PyTorch.
+
+---
+
+# Why `optimizer.zero_grad()`?
+
+Gradients accumulate by default.
+
+Without resetting them
+
+```python
+optimizer.zero_grad()
+```
+
+the gradients from previous iterations would continue to add up, leading to incorrect updates.
+
+---
+
+# Checking Learning Rate
+
+```python
+print(
+    optimizer.param_groups[0]["lr"]
+)
+```
+
+Output
+
+```
+0.001
+```
+
+Useful for debugging and learning rate scheduling.
+
+---
+
+# When to Use Which Optimizer?
+
+| Task | Optimizer |
+|------|-----------|
+| Beginner Projects | Adam |
+| CNNs | SGD + Momentum |
+| RNNs | RMSProp |
+| Transformers | AdamW |
+| LLM Fine-Tuning | AdamW |
+
+---
+
+# Real World Examples
+
+### ResNet
+
+```
+Optimizer
+
+↓
+
+SGD + Momentum
+```
+
+---
+
+### Llama 3
+
+```
+Optimizer
+
+↓
+
+AdamW
+```
+
+---
+
+### BERT
+
+```
+Optimizer
+
+↓
+
+AdamW
+```
+
+---
+
+### Stable Diffusion
+
+```
+Optimizer
+
+↓
+
+AdamW
+```
+
+---
+
+# Best Practices
+
+✅ Start with Adam for new projects.
+
+✅ Use AdamW for Transformer-based models.
+
+✅ Tune the learning rate before changing optimizers.
+
+✅ Call `optimizer.zero_grad()` before `loss.backward()`.
+
+✅ Save optimizer state when saving checkpoints.
+
+---
+
+# Saving Optimizer
+
+```python
+torch.save({
+
+    "model": model.state_dict(),
+
+    "optimizer": optimizer.state_dict()
+
+}, "checkpoint.pth")
+```
+
+Loading
+
+```python
+checkpoint = torch.load("checkpoint.pth")
+
+model.load_state_dict(
+    checkpoint["model"]
+)
+
+optimizer.load_state_dict(
+    checkpoint["optimizer"]
+)
+```
+
+This allows training to resume from the last checkpoint.
+
+---
+
+# Common Mistakes
+
+❌ Forgetting `optimizer.step()`
+
+❌ Forgetting `optimizer.zero_grad()`
+
+❌ Using an extremely high learning rate
+
+❌ Choosing the wrong optimizer without experimentation
+
+❌ Not saving optimizer state
+
+---
+
+# Cheat Sheet
+
+| Optimizer | Best For |
+|------------|----------|
+| SGD | Simple Models |
+| SGD + Momentum | CNNs |
+| RMSProp | Sequential Models |
+| Adam | General Deep Learning |
+| AdamW | Transformers & LLMs |
+
+---
+
+# Summary
+
+- Optimizers update model parameters using gradients.
+- Gradient Descent is the foundation of optimization.
+- Learning Rate controls the step size during updates.
+- SGD is simple and memory-efficient.
+- Momentum speeds up SGD.
+- RMSProp adapts learning rates for each parameter.
+- Adam combines Momentum and RMSProp.
+- AdamW is the preferred optimizer for modern Transformer and LLM training.
+- Proper learning rate selection is often more important than optimizer choice.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is an optimizer?
+2. Why do neural networks need optimizers?
+3. Explain Gradient Descent.
+4. Difference between Batch, Stochastic, and Mini-Batch Gradient Descent.
+5. What is Learning Rate?
+6. Difference between Adam and AdamW.
+7. Why is AdamW preferred for Transformers?
+8. What is Weight Decay?
+9. Why do we call `optimizer.zero_grad()`?
+10. Which optimizer would you choose for fine-tuning a Large Language Model?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Train a Linear Regression model using SGD.
+
+---
+
+### Exercise 2
+
+Train the same model using Adam.
+
+Compare:
+
+- Loss
+- Number of epochs
+- Convergence speed
+
+---
+
+### Exercise 3
+
+Change the learning rate to
+
+```
+0.1
+
+0.01
+
+0.001
+
+0.0001
+```
+
+Observe how training changes.
+
+---
+
+### Exercise 4
+
+Save the optimizer state and resume training.
+
+---
+
+### Exercise 5
+
+Research which optimizer is used in:
+
+- GPT-4 (publicly disclosed information is limited)
+- Llama
+- Gemma
+- Qwen
+- Stable Diffusion
+
+---
+
+
+
+# Module 8 – Datasets & DataLoaders (`torch.utils.data`)
+
+> **Goal:** Learn how PyTorch loads, batches, shuffles, and efficiently feeds data to deep learning models.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Data Loading is Important
+- What is a Dataset?
+- What is a DataLoader?
+- Dataset vs DataLoader
+- Built-in Datasets
+- Custom Dataset
+- `__init__()`
+- `__len__()`
+- `__getitem__()`
+- DataLoader
+- Batch Size
+- Shuffle
+- num_workers
+- pin_memory
+- drop_last
+- Collate Function
+- Data Augmentation
+- Complete Example
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you're training a model on
+
+```
+10 Million Images
+```
+
+Would you write
+
+```python
+image1 = ...
+
+image2 = ...
+
+image3 = ...
+
+...
+
+image10000000 = ...
+```
+
+Of course not.
+
+Instead,
+
+we need a system that can
+
+- Read images from disk
+- Read CSV files
+- Read text
+- Read videos
+- Read audio
+
+and provide them to the neural network
+
+efficiently.
+
+That system is
+
+```
+Dataset
+
++
+
+DataLoader
+```
+
+---
+
+# Why Data Loading Matters
+
+A GPU can perform billions of operations per second.
+
+But if the GPU waits for data,
+
+training becomes slow.
+
+```
+GPU Waiting
+
+↓
+
+No Training
+
+↓
+
+Poor Performance
+```
+
+The goal is
+
+```
+Always Keep GPU Busy
+```
+
+PyTorch's DataLoader is designed for this purpose.
+
+---
+
+# Training Pipeline
+
+```
+Dataset
+
+↓
+
+DataLoader
+
+↓
+
+Batch
+
+↓
+
+GPU
+
+↓
+
+Model
+
+↓
+
+Loss
+
+↓
+
+Backward
+
+↓
+
+Optimizer
+```
+
+---
+
+# What is a Dataset?
+
+A Dataset is simply
+
+> **A collection of training examples.**
+
+Examples
+
+```
+Images
+
+CSV Files
+
+Text
+
+Audio
+
+Videos
+
+Medical Records
+```
+
+PyTorch represents every dataset using
+
+```
+Dataset Class
+```
+
+---
+
+# Built-in Datasets
+
+PyTorch already provides
+
+```python
+torchvision.datasets
+```
+
+Popular datasets
+
+- MNIST
+- CIFAR10
+- CIFAR100
+- FashionMNIST
+- ImageNet
+
+Example
+
+```python
+from torchvision.datasets import MNIST
+```
+
+---
+
+# Dataset vs DataLoader
+
+Dataset
+
+```
+Stores Data
+```
+
+DataLoader
+
+```
+Loads Data Efficiently
+```
+
+Example
+
+```
+Dataset
+
+↓
+
+Image 1
+
+Image 2
+
+Image 3
+
+...
+
+↓
+
+DataLoader
+
+↓
+
+Batch
+
+↓
+
+Model
+```
+
+---
+
+# Custom Dataset
+
+Most real-world datasets are custom.
+
+To create one,
+
+inherit
+
+```python
+Dataset
+```
+
+Example
+
+```python
+from torch.utils.data import Dataset
+```
+
+---
+
+# Dataset Structure
+
+Every Dataset needs
+
+```
+__init__()
+
+__len__()
+
+__getitem__()
+```
+
+---
+
+# __init__()
+
+Runs once.
+
+Used for
+
+- Reading file names
+- Loading CSV
+- Initializing variables
+
+Example
+
+```python
+class MyDataset(Dataset):
+
+    def __init__(self):
+
+        pass
+```
+
+---
+
+# __len__()
+
+Returns
+
+```
+Total Number
+
+of Samples
+```
+
+Example
+
+```python
+def __len__(self):
+
+    return len(self.data)
+```
+
+---
+
+# __getitem__()
+
+Returns
+
+```
+One Sample
+```
+
+Example
+
+```python
+def __getitem__(self,index):
+
+    return self.data[index]
+```
+
+This is the most important method.
+
+---
+
+# Complete Dataset Example
+
+```python
+from torch.utils.data import Dataset
+
+class NumberDataset(Dataset):
+
+    def __init__(self):
+
+        self.data=[1,2,3,4,5]
+
+    def __len__(self):
+
+        return len(self.data)
+
+    def __getitem__(self,index):
+
+        return self.data[index]
+```
+
+---
+
+# Creating Dataset
+
+```python
+dataset = NumberDataset()
+
+print(len(dataset))
+```
+
+Output
+
+```
+5
+```
+
+---
+
+# Accessing Data
+
+```python
+print(dataset[0])
+```
+
+Output
+
+```
+1
+```
+
+---
+
+# What is DataLoader?
+
+DataLoader automatically
+
+- Creates batches
+- Shuffles data
+- Loads multiple samples
+- Supports multiprocessing
+
+Instead of
+
+```
+One Image
+
+↓
+
+Model
+```
+
+we send
+
+```
+Batch
+
+↓
+
+Model
+```
+
+---
+
+# Creating DataLoader
+
+```python
+from torch.utils.data import DataLoader
+
+loader = DataLoader(
+
+    dataset,
+
+    batch_size=2,
+
+    shuffle=True
+)
+```
+
+---
+
+# Batch Size
+
+Batch Size means
+
+```
+How many samples
+
+go together
+```
+
+Example
+
+Dataset
+
+```
+10 Images
+```
+
+Batch Size
+
+```
+2
+```
+
+Output
+
+```
+Batch 1
+
+Image1
+
+Image2
+
+---------------
+
+Batch2
+
+Image3
+
+Image4
+
+---------------
+```
+
+---
+
+# Iterating DataLoader
+
+```python
+for batch in loader:
+
+    print(batch)
+```
+
+Possible Output
+
+```
+tensor([2,5])
+
+tensor([1,4])
+
+tensor([3])
+```
+
+---
+
+# Shuffle
+
+Training
+
+```python
+shuffle=True
+```
+
+Every epoch
+
+Order changes.
+
+```
+Epoch1
+
+1 2 3 4 5
+
+Epoch2
+
+3 5 1 4 2
+```
+
+Helps prevent overfitting to data order.
+
+---
+
+# num_workers
+
+Controls
+
+```
+How many CPU
+
+Processes
+
+Load Data
+```
+
+Example
+
+```python
+DataLoader(
+
+dataset,
+
+num_workers=4
+)
+```
+
+Higher values may improve throughput depending on your hardware.
+
+---
+
+# pin_memory
+
+Useful for GPU training.
+
+```python
+DataLoader(
+
+dataset,
+
+pin_memory=True
+)
+```
+
+Pinned memory can make CPU-to-GPU transfers more efficient.
+
+---
+
+# drop_last
+
+Suppose
+
+```
+10 Samples
+
+Batch Size=3
+```
+
+Output
+
+```
+3
+
+3
+
+3
+
+1
+```
+
+Last Batch
+
+Only
+
+```
+1 Sample
+```
+
+If
+
+```python
+drop_last=True
+```
+
+Last incomplete batch is discarded.
+
+---
+
+# Complete DataLoader
+
+```python
+loader = DataLoader(
+
+dataset,
+
+batch_size=32,
+
+shuffle=True,
+
+num_workers=4,
+
+pin_memory=True
+)
+```
+
+---
+
+# Multiple Inputs
+
+Dataset can return
+
+```python
+Image
+
+Label
+```
+
+Example
+
+```python
+return image,label
+```
+
+Training
+
+```python
+for images,labels in loader:
+
+    print(images.shape)
+
+    print(labels.shape)
+```
+
+---
+
+# Custom CSV Dataset
+
+```python
+import pandas as pd
+
+class CSVDataset(Dataset):
+
+    def __init__(self,file):
+
+        self.df=pd.read_csv(file)
+
+    def __len__(self):
+
+        return len(self.df)
+
+    def __getitem__(self,index):
+
+        x=self.df.iloc[index,:-1].values
+
+        y=self.df.iloc[index,-1]
+
+        return x,y
+```
+
+---
+
+# Image Dataset
+
+```python
+from torchvision.io import read_image
+
+image = read_image(path)
+```
+
+Usually combined with
+
+```
+Transforms
+```
+
+such as resizing and normalization.
+
+---
+
+# Data Augmentation
+
+Used to increase dataset diversity.
+
+Examples
+
+- Flip
+- Rotate
+- Crop
+- Resize
+- Normalize
+- Color Jitter
+
+```python
+from torchvision import transforms
+
+transform = transforms.Compose([
+
+    transforms.Resize((224,224)),
+
+    transforms.ToTensor()
+
+])
+```
+
+---
+
+# Collate Function
+
+Default DataLoader stacks tensors into batches.
+
+Sometimes
+
+data has
+
+```
+Different Lengths
+```
+
+Example
+
+- Sentences
+- Documents
+- Audio
+
+A custom `collate_fn` lets you control how samples are combined into a batch.
+
+```python
+loader = DataLoader(
+
+dataset,
+
+collate_fn=my_collate
+)
+```
+
+This is especially important in NLP and LLM training.
+
+---
+
+# Complete Training Example
+
+```python
+loader = DataLoader(
+
+dataset,
+
+batch_size=32,
+
+shuffle=True
+)
+
+for images,labels in loader:
+
+    outputs=model(images)
+
+    loss=criterion(outputs,labels)
+
+    optimizer.zero_grad()
+
+    loss.backward()
+
+    optimizer.step()
+```
+
+---
+
+# DataLoader Workflow
+
+```
+CSV
+
+↓
+
+Dataset
+
+↓
+
+DataLoader
+
+↓
+
+Batch
+
+↓
+
+GPU
+
+↓
+
+Model
+
+↓
+
+Prediction
+```
+
+---
+
+# Best Practices
+
+✅ Use DataLoader instead of manual loops.
+
+✅ Shuffle training data.
+
+✅ Use appropriate batch size.
+
+✅ Increase `num_workers` after testing performance.
+
+✅ Use `pin_memory=True` when training on CUDA.
+
+✅ Keep preprocessing inside Dataset or transforms.
+
+---
+
+# Common Mistakes
+
+❌ Forgetting `shuffle=True` for training.
+
+❌ Loading the entire dataset into GPU memory.
+
+❌ Choosing a batch size larger than GPU memory allows.
+
+❌ Performing expensive preprocessing inside the training loop instead of in the Dataset or transforms.
+
+---
+
+# Cheat Sheet
+
+| Component | Purpose |
+|------------|---------|
+| Dataset | Stores data |
+| DataLoader | Loads batches |
+| `batch_size` | Samples per batch |
+| `shuffle` | Randomizes order |
+| `num_workers` | Parallel data loading |
+| `pin_memory` | Faster CPU → GPU transfer |
+| `drop_last` | Drops incomplete final batch |
+| `collate_fn` | Custom batch creation |
+
+---
+
+# Summary
+
+- Dataset represents a collection of samples.
+- DataLoader efficiently feeds batches to the model.
+- Every custom Dataset implements `__init__()`, `__len__()`, and `__getitem__()`.
+- Batching improves GPU utilization.
+- Shuffling helps models generalize better.
+- `num_workers` enables parallel data loading.
+- `pin_memory` can speed up GPU transfers.
+- `collate_fn` is useful for variable-length data such as text.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is the difference between Dataset and DataLoader?
+2. Why do we need `__getitem__()`?
+3. What does `__len__()` return?
+4. Why do we use batching?
+5. What is `shuffle=True` used for?
+6. What does `num_workers` do?
+7. What is the purpose of `pin_memory`?
+8. What does `drop_last=True` do?
+9. When would you write a custom `collate_fn`?
+10. Why shouldn't we load an entire large dataset into GPU memory?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Create a custom Dataset containing numbers from 1 to 100.
+
+---
+
+### Exercise 2
+
+Create a DataLoader with
+
+```
+batch_size = 10
+```
+
+and print each batch.
+
+---
+
+### Exercise 3
+
+Load a CSV file using a custom Dataset.
+
+---
+
+### Exercise 4
+
+Create an image Dataset using `torchvision`.
+
+---
+
+### Exercise 5
+
+Experiment with different values of
+
+- `batch_size`
+- `shuffle`
+- `num_workers`
+
+Observe how they affect training speed.
+
+---
+
+# Module 9 – Training Loop
+
+> **Goal:** Learn how to train a neural network from scratch using PyTorch by combining tensors, models, loss functions, optimizers, and datasets into a complete training pipeline.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is a Training Loop?
+- Why Do We Need a Training Loop?
+- Complete Training Pipeline
+- Epoch
+- Batch
+- Iteration
+- Forward Pass
+- Loss Calculation
+- Backward Pass
+- Optimizer Step
+- Zero Gradients
+- Model Training
+- Logging Loss
+- Validation Loop
+- Saving Model
+- Complete Example
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you have a student preparing for an exam.
+
+The learning process looks like this:
+
+```
+Read Notes
+
+↓
+
+Attempt Questions
+
+↓
+
+Check Answers
+
+↓
+
+Find Mistakes
+
+↓
+
+Learn From Mistakes
+
+↓
+
+Repeat
+```
+
+A neural network learns in exactly the same way.
+
+Instead of notes, it receives **training data**.
+
+Instead of checking answers manually, it computes a **loss**.
+
+Instead of remembering mistakes, it updates its **weights**.
+
+This repeated learning process is called the **Training Loop**.
+
+---
+
+# What is a Training Loop?
+
+A training loop is the repeated process of:
+
+1. Reading a batch of data
+2. Making predictions
+3. Computing loss
+4. Calculating gradients
+5. Updating model weights
+6. Repeating until the model learns
+
+Without a training loop, a neural network cannot improve.
+
+---
+
+# Complete Training Pipeline
+
+```text
+Dataset
+
+↓
+
+DataLoader
+
+↓
+
+Batch
+
+↓
+
+Model
+
+↓
+
+Prediction
+
+↓
+
+Loss Function
+
+↓
+
+Backward()
+
+↓
+
+Optimizer
+
+↓
+
+Updated Weights
+
+↓
+
+Next Batch
+```
+
+---
+
+# Important Terms
+
+## Epoch
+
+An **Epoch** means
+
+> One complete pass through the entire training dataset.
+
+Example
+
+```
+1000 Images
+
+↓
+
+Model sees all 1000 images once
+
+=
+
+1 Epoch
+```
+
+---
+
+## Batch
+
+A **Batch** is a small subset of the dataset.
+
+Example
+
+```
+Dataset
+
+1000 Images
+
+Batch Size = 100
+
+↓
+
+10 Batches
+```
+
+---
+
+## Iteration
+
+One iteration means processing **one batch**.
+
+Example
+
+```
+Epoch = 1
+
+Batch Size = 100
+
+Dataset = 1000 Images
+
+Iterations = 10
+```
+
+Relationship
+
+```
+Dataset
+
+↓
+
+Epoch
+
+↓
+
+Batches
+
+↓
+
+Iterations
+```
+
+---
+
+# Forward Pass
+
+The input data is passed through the neural network.
+
+```text
+Input
+
+↓
+
+Model
+
+↓
+
+Prediction
+```
+
+PyTorch
+
+```python
+outputs = model(images)
+```
+
+---
+
+# Loss Calculation
+
+Compare prediction with actual labels.
+
+```python
+loss = criterion(outputs, labels)
+```
+
+Smaller loss
+
+↓
+
+Better model
+
+---
+
+# Backward Pass
+
+Compute gradients.
+
+```python
+loss.backward()
+```
+
+Autograd calculates
+
+```
+∂Loss/∂Weight
+```
+
+for every trainable parameter.
+
+---
+
+# Optimizer Step
+
+Update weights.
+
+```python
+optimizer.step()
+```
+
+Formula
+
+```
+New Weight
+
+=
+
+Old Weight
+
+-
+
+Learning Rate
+
+×
+
+Gradient
+```
+
+---
+
+# Zero Gradients
+
+Reset gradients before the next iteration.
+
+```python
+optimizer.zero_grad()
+```
+
+Why?
+
+Because gradients accumulate by default.
+
+---
+
+# Order of Operations
+
+Always follow this sequence:
+
+```text
+Forward Pass
+
+↓
+
+Loss Calculation
+
+↓
+
+Zero Gradients
+
+↓
+
+Backward Pass
+
+↓
+
+Optimizer Step
+```
+
+Common implementation:
+
+```python
+optimizer.zero_grad()
+
+outputs = model(images)
+
+loss = criterion(outputs, labels)
+
+loss.backward()
+
+optimizer.step()
+```
+
+---
+
+# Training Loop Skeleton
+
+```python
+for epoch in range(num_epochs):
+
+    for images, labels in train_loader:
+
+        optimizer.zero_grad()
+
+        outputs = model(images)
+
+        loss = criterion(outputs, labels)
+
+        loss.backward()
+
+        optimizer.step()
+```
+
+This pattern appears in almost every PyTorch project.
+
+---
+
+# Logging Loss
+
+Monitor training progress.
+
+```python
+print(loss.item())
+```
+
+Example
+
+```
+Epoch 1
+
+Loss = 2.31
+
+Epoch 2
+
+Loss = 1.65
+
+Epoch 3
+
+Loss = 0.82
+```
+
+A decreasing loss generally indicates learning.
+
+---
+
+# Complete Training Example
+
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+model = SimpleNN()
+
+criterion = nn.CrossEntropyLoss()
+
+optimizer = optim.Adam(
+    model.parameters(),
+    lr=0.001
+)
+
+epochs = 5
+
+for epoch in range(epochs):
+
+    for images, labels in train_loader:
+
+        optimizer.zero_grad()
+
+        outputs = model(images)
+
+        loss = criterion(outputs, labels)
+
+        loss.backward()
+
+        optimizer.step()
+
+    print(
+        f"Epoch {epoch+1}, Loss: {loss.item():.4f}"
+    )
+```
+
+---
+
+# Training on GPU
+
+```python
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else
+    "cpu"
+)
+
+model = model.to(device)
+
+for images, labels in train_loader:
+
+    images = images.to(device)
+
+    labels = labels.to(device)
+
+    optimizer.zero_grad()
+
+    outputs = model(images)
+
+    loss = criterion(outputs, labels)
+
+    loss.backward()
+
+    optimizer.step()
+```
+
+---
+
+# Validation Loop
+
+Training and validation are different.
+
+Training
+
+```
+Weights Update
+
+YES
+```
+
+Validation
+
+```
+Weights Update
+
+NO
+```
+
+Example
+
+```python
+model.eval()
+
+with torch.no_grad():
+
+    for images, labels in val_loader:
+
+        outputs = model(images)
+
+        loss = criterion(outputs, labels)
+```
+
+---
+
+# Why `model.train()`?
+
+```python
+model.train()
+```
+
+Enables training behavior for layers like:
+
+- Dropout
+- BatchNorm
+
+---
+
+# Why `model.eval()`?
+
+```python
+model.eval()
+```
+
+Switches the model to inference mode.
+
+Required before validation or testing.
+
+---
+
+# Saving the Model
+
+```python
+torch.save(
+    model.state_dict(),
+    "model.pth"
+)
+```
+
+---
+
+# Loading the Model
+
+```python
+model.load_state_dict(
+    torch.load("model.pth")
+)
+
+model.eval()
+```
+
+---
+
+# Saving Checkpoints
+
+```python
+torch.save({
+
+    "epoch": epoch,
+
+    "model": model.state_dict(),
+
+    "optimizer": optimizer.state_dict()
+
+}, "checkpoint.pth")
+```
+
+Useful for resuming training.
+
+---
+
+# Visual Workflow
+
+```text
+Data
+
+↓
+
+Forward Pass
+
+↓
+
+Prediction
+
+↓
+
+Loss
+
+↓
+
+Backward
+
+↓
+
+Gradients
+
+↓
+
+Optimizer
+
+↓
+
+Updated Model
+
+↓
+
+Repeat
+```
+
+---
+
+# Best Practices
+
+✅ Shuffle training data.
+
+✅ Move data and model to the same device.
+
+✅ Use `optimizer.zero_grad()` every iteration.
+
+✅ Call `model.train()` before training.
+
+✅ Call `model.eval()` before validation.
+
+✅ Save checkpoints regularly.
+
+---
+
+# Common Mistakes
+
+❌ Forgetting `optimizer.zero_grad()`.
+
+❌ Forgetting `model.train()`.
+
+❌ Running validation without `torch.no_grad()`.
+
+❌ Mixing CPU and GPU tensors.
+
+❌ Saving the entire model instead of `state_dict()`.
+
+---
+
+# Cheat Sheet
+
+| Step | Code |
+|------|------|
+| Training Mode | `model.train()` |
+| Forward Pass | `outputs = model(images)` |
+| Compute Loss | `loss = criterion(outputs, labels)` |
+| Clear Gradients | `optimizer.zero_grad()` |
+| Backward Pass | `loss.backward()` |
+| Update Weights | `optimizer.step()` |
+| Evaluation Mode | `model.eval()` |
+| Disable Gradients | `with torch.no_grad():` |
+| Save Model | `torch.save(model.state_dict(), "model.pth")` |
+
+---
+
+# Summary
+
+- A training loop is the core of every deep learning model.
+- Training consists of forward pass, loss calculation, backward pass, and optimizer step.
+- Epochs, batches, and iterations define how data is processed.
+- Validation uses `model.eval()` and `torch.no_grad()`.
+- Saving checkpoints enables training to resume later.
+- Following the correct order of operations ensures stable learning.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is a training loop?
+2. Difference between epoch, batch, and iteration?
+3. Why do we call `optimizer.zero_grad()`?
+4. What does `loss.backward()` do?
+5. Why is `optimizer.step()` necessary?
+6. Difference between `model.train()` and `model.eval()`?
+7. Why is `torch.no_grad()` used during validation?
+8. Why save `state_dict()` instead of the whole model?
+9. What should happen if the loss is not decreasing?
+10. How would you resume training from a checkpoint?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Write a training loop for a Linear Regression model.
+
+---
+
+### Exercise 2
+
+Train an MNIST classifier for 5 epochs.
+
+---
+
+### Exercise 3
+
+Print the loss after every batch and every epoch.
+
+---
+
+### Exercise 4
+
+Add validation after each epoch using `model.eval()`.
+
+---
+
+### Exercise 5
+
+Save the best model checkpoint based on validation loss.
+
+---
+
+# Module 10 – Validation, Testing & Model Evaluation
+
+> **Goal:** Learn how to properly evaluate deep learning models, understand different evaluation metrics, avoid overfitting, and choose the best model for deployment.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Model Evaluation?
+- Training vs Validation vs Testing
+- Overfitting & Underfitting
+- Validation Pipeline
+- model.train() vs model.eval()
+- torch.no_grad()
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- Confusion Matrix
+- ROC Curve
+- AUC
+- Validation Loss
+- Early Stopping
+- Saving Best Model
+- Complete Validation Loop
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you are preparing for an exam.
+
+You solve
+
+```
+100 Practice Questions
+```
+
+every day.
+
+Eventually,
+
+you memorize every question.
+
+Now,
+
+your friend gives you
+
+```
+20 Completely New Questions
+```
+
+If you score well,
+
+it means
+
+```
+You Learned
+```
+
+If you score poorly,
+
+it means
+
+```
+You Memorized
+```
+
+Deep Learning models behave exactly the same way.
+
+A model should **learn patterns**, not memorize the training data.
+
+To check this,
+
+we evaluate the model on **unseen data**.
+
+---
+
+# Why Do We Need Validation?
+
+Suppose
+
+Training Accuracy
+
+```
+100%
+```
+
+Looks amazing.
+
+But
+
+Testing Accuracy
+
+```
+45%
+```
+
+Something is wrong.
+
+The model memorized
+
+instead of
+
+learning.
+
+This problem is called
+
+```
+Overfitting
+```
+
+Validation helps us detect it early.
+
+---
+
+# Dataset Split
+
+A dataset is usually divided into
+
+```
+100%
+
+↓
+
+Training
+
+↓
+
+Validation
+
+↓
+
+Testing
+```
+
+Typical split
+
+```
+70%
+
+↓
+
+Training
+
+20%
+
+↓
+
+Validation
+
+10%
+
+↓
+
+Testing
+```
+
+or
+
+```
+80%
+
+10%
+
+10%
+```
+
+---
+
+# Purpose of Each Dataset
+
+## Training Set
+
+Used to
+
+```
+Learn
+```
+
+Weights are updated.
+
+---
+
+## Validation Set
+
+Used to
+
+```
+Tune
+
+Hyperparameters
+```
+
+Weights are NOT updated.
+
+---
+
+## Test Set
+
+Used only once.
+
+Purpose
+
+```
+Final Performance
+```
+
+Never train on test data.
+
+---
+
+# Complete Pipeline
+
+```
+Training Data
+
+↓
+
+Train Model
+
+↓
+
+Validation Data
+
+↓
+
+Choose Best Model
+
+↓
+
+Test Data
+
+↓
+
+Final Accuracy
+```
+
+---
+
+# model.train()
+
+Training Mode
+
+```python
+model.train()
+```
+
+Enables
+
+- Dropout
+- BatchNorm Updates
+
+Used only during training.
+
+---
+
+# model.eval()
+
+Evaluation Mode
+
+```python
+model.eval()
+```
+
+Disables
+
+- Dropout randomness
+- BatchNorm updates
+
+Always use
+
+```
+model.eval()
+```
+
+during validation and testing.
+
+---
+
+# torch.no_grad()
+
+Validation doesn't require gradients.
+
+Example
+
+```python
+with torch.no_grad():
+
+    outputs = model(images)
+```
+
+Advantages
+
+✅ Faster
+
+✅ Less Memory
+
+✅ No Gradient Computation
+
+---
+
+# Validation Loop
+
+```python
+model.eval()
+
+total_loss = 0
+
+correct = 0
+
+total = 0
+
+with torch.no_grad():
+
+    for images, labels in val_loader:
+
+        outputs = model(images)
+
+        loss = criterion(outputs, labels)
+
+        total_loss += loss.item()
+
+        predictions = outputs.argmax(dim=1)
+
+        correct += (predictions == labels).sum().item()
+
+        total += labels.size(0)
+
+accuracy = correct / total
+
+print("Validation Accuracy:", accuracy)
+```
+
+---
+
+# Training vs Validation
+
+| Feature | Training | Validation |
+|----------|-----------|------------|
+| Updates Weights | ✅ | ❌ |
+| Computes Gradients | ✅ | ❌ |
+| Uses Backward | ✅ | ❌ |
+| Uses Optimizer | ✅ | ❌ |
+| model.train() | ✅ | ❌ |
+| model.eval() | ❌ | ✅ |
+
+---
+
+# Accuracy
+
+Most common metric.
+
+Formula
+
+```
+Correct Predictions
+
+/
+
+Total Predictions
+```
+
+Example
+
+```
+100 Images
+
+↓
+
+95 Correct
+
+↓
+
+Accuracy
+
+95%
+```
+
+---
+
+# PyTorch Example
+
+```python
+predictions = outputs.argmax(dim=1)
+
+accuracy = (
+
+predictions == labels
+
+).float().mean()
+```
+
+---
+
+# Precision
+
+Precision answers
+
+```
+Among
+
+all predicted positives,
+
+how many
+
+were actually positive?
+```
+
+Formula
+
+```
+TP
+
+/
+
+TP+FP
+```
+
+Useful for
+
+- Spam Detection
+- Medical Diagnosis
+
+---
+
+# Recall
+
+Recall answers
+
+```
+Among
+
+all actual positives,
+
+how many
+
+did we correctly find?
+```
+
+Formula
+
+```
+TP
+
+/
+
+TP+FN
+```
+
+Very important when
+
+missing positives
+
+is expensive.
+
+Example
+
+Cancer Detection.
+
+---
+
+# Precision vs Recall
+
+Imagine
+
+100 Emails
+
+Spam
+
+```
+20
+```
+
+Your model marks
+
+```
+15
+
+as Spam
+```
+
+Precision
+
+↓
+
+How many predicted spam emails were actually spam?
+
+Recall
+
+↓
+
+How many of the real spam emails did we detect?
+
+---
+
+# F1 Score
+
+Sometimes
+
+Accuracy is misleading.
+
+F1 combines
+
+```
+Precision
+
++
+
+Recall
+```
+
+Formula
+
+```
+2PR
+
+/
+
+P+R
+```
+
+Used for
+
+- Imbalanced Data
+- Fraud Detection
+- Medical AI
+
+---
+
+# Confusion Matrix
+
+Shows
+
+Correct
+
+and
+
+Wrong Predictions.
+
+```
+                 Predicted
+
+            Yes        No
+
+Actual Yes   TP        FN
+
+Actual No    FP        TN
+```
+
+Where
+
+TP
+
+True Positive
+
+FP
+
+False Positive
+
+FN
+
+False Negative
+
+TN
+
+True Negative
+
+---
+
+# ROC Curve
+
+ROC
+
+stands for
+
+```
+Receiver Operating Characteristic
+```
+
+Shows
+
+```
+True Positive Rate
+
+vs
+
+False Positive Rate
+```
+
+A good classifier
+
+has a curve
+
+closer to
+
+top-left.
+
+---
+
+# AUC
+
+Area Under Curve
+
+Range
+
+```
+0
+
+↓
+
+1
+```
+
+```
+1
+
+Perfect Model
+```
+
+```
+0.5
+
+Random Guess
+```
+
+Higher AUC
+
+↓
+
+Better Model
+
+---
+
+# Validation Loss
+
+Don't only monitor
+
+Accuracy.
+
+Also monitor
+
+```
+Validation Loss
+```
+
+Sometimes
+
+Accuracy
+
+stays same
+
+while
+
+Loss
+
+increases.
+
+This may indicate
+
+overfitting.
+
+---
+
+# Overfitting
+
+```
+Training Accuracy
+
+99%
+
+↓
+
+Validation Accuracy
+
+70%
+```
+
+Model memorized
+
+training data.
+
+---
+
+# Underfitting
+
+```
+Training Accuracy
+
+55%
+
+↓
+
+Validation Accuracy
+
+53%
+```
+
+Model
+
+didn't learn enough.
+
+---
+
+# Ideal Model
+
+```
+Training
+
+95%
+
+↓
+
+Validation
+
+94%
+```
+
+Small difference.
+
+Good Generalization.
+
+---
+
+# Early Stopping
+
+Instead of
+
+training
+
+100 epochs,
+
+stop when
+
+validation loss
+
+stops improving.
+
+Pseudo Logic
+
+```
+Validation Loss
+
+↓
+
+Improving
+
+Continue
+
+↓
+
+No Improvement
+
+Stop
+```
+
+Advantages
+
+- Saves Time
+- Prevents Overfitting
+
+---
+
+# Save Best Model
+
+```python
+best_loss = float("inf")
+
+if val_loss < best_loss:
+
+    best_loss = val_loss
+
+    torch.save(
+
+        model.state_dict(),
+
+        "best_model.pth"
+    )
+```
+
+Never save only
+
+the last epoch.
+
+Save
+
+the
+
+best model.
+
+---
+
+# Visual Workflow
+
+```
+Training
+
+↓
+
+Validation
+
+↓
+
+Metrics
+
+↓
+
+Choose Best Model
+
+↓
+
+Testing
+
+↓
+
+Deployment
+```
+
+---
+
+# Common Evaluation Metrics
+
+| Metric | Used For |
+|----------|-----------|
+| Accuracy | General Classification |
+| Precision | Spam Detection |
+| Recall | Medical Diagnosis |
+| F1 Score | Imbalanced Dataset |
+| ROC-AUC | Binary Classification |
+
+---
+
+# Best Practices
+
+✅ Use separate Validation and Test datasets.
+
+✅ Always call
+
+```python
+model.eval()
+```
+
+during evaluation.
+
+✅ Use
+
+```python
+torch.no_grad()
+```
+
+for validation.
+
+✅ Save the best model.
+
+✅ Monitor both
+
+Accuracy
+
+and
+
+Loss.
+
+---
+
+# Common Mistakes
+
+❌ Evaluating in
+
+```
+model.train()
+```
+
+mode.
+
+---
+
+❌ Forgetting
+
+```
+torch.no_grad()
+```
+
+---
+
+❌ Using
+
+Test Data
+
+for Hyperparameter Tuning.
+
+---
+
+❌ Looking only at
+
+Accuracy.
+
+---
+
+# Cheat Sheet
+
+| Task | Code |
+|------|------|
+| Training Mode | `model.train()` |
+| Evaluation Mode | `model.eval()` |
+| Disable Gradients | `with torch.no_grad():` |
+| Prediction | `outputs.argmax(dim=1)` |
+| Save Best Model | `torch.save()` |
+
+---
+
+# Summary
+
+- Validation measures how well the model generalizes to unseen data.
+- Testing is used only for the final evaluation.
+- `model.train()` and `model.eval()` control the behavior of certain layers.
+- `torch.no_grad()` speeds up inference and reduces memory usage.
+- Accuracy alone is not enough—precision, recall, F1 score, and ROC-AUC provide deeper insights.
+- Early stopping helps prevent overfitting.
+- Save the best-performing model based on validation performance.
+
+---
+
+# 🎤 Interview Questions
+
+1. Difference between Training, Validation, and Testing?
+2. Why use `model.eval()`?
+3. Why use `torch.no_grad()`?
+4. Difference between Precision and Recall?
+5. What is F1 Score?
+6. What is a Confusion Matrix?
+7. What is ROC-AUC?
+8. What is Overfitting?
+9. What is Underfitting?
+10. Why should we save the best model instead of the last model?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Implement a validation loop.
+
+---
+
+### Exercise 2
+
+Compute validation accuracy after every epoch.
+
+---
+
+### Exercise 3
+
+Save the best model using validation loss.
+
+---
+
+### Exercise 4
+
+Research Precision, Recall, and F1 Score for an imbalanced dataset.
+
+---
+
+### Exercise 5
+
+Create a confusion matrix for a simple classifier.
+
+---
+
+# Module 11 – Saving & Loading Models
+
+> **Goal:** Learn how to save, load, resume, and deploy PyTorch models using best practices followed in real-world AI and LLM projects.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Save Models?
+- What is state_dict()?
+- Saving Model Weights
+- Loading Model Weights
+- Saving Entire Model
+- Loading Entire Model
+- Saving Checkpoints
+- Resume Training
+- Saving Optimizer State
+- Saving Multiple Models
+- Model Versioning
+- Inference Workflow
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you are training
+
+```
+Llama
+
+7 Billion Parameters
+```
+
+Training takes
+
+```
+4 Days
+```
+
+After
+
+```
+3 Days
+
+23 Hours
+```
+
+Power goes off.
+
+Computer crashes.
+
+Everything is lost.
+
+Would you start again?
+
+```
+No.
+```
+
+Instead,
+
+every few minutes
+
+or every epoch,
+
+you save
+
+```
+Model
+
+Optimizer
+
+Epoch
+
+Loss
+```
+
+This saved information is called a
+
+```
+Checkpoint
+```
+
+Checkpointing is one of the most important concepts in Deep Learning.
+
+---
+
+# Why Save Models?
+
+Training takes
+
+```
+Minutes
+
+Hours
+
+Days
+
+Weeks
+```
+
+Examples
+
+| Model | Training Time |
+|--------|---------------|
+| CNN | Minutes |
+| ResNet | Hours |
+| ViT | Days |
+| Llama | Weeks |
+| GPT | Months |
+
+Without saving,
+
+all progress is lost.
+
+---
+
+# What is state_dict()?
+
+Every PyTorch model contains
+
+```
+Weights
+
+Biases
+```
+
+PyTorch stores them inside
+
+```
+state_dict()
+```
+
+Think of it as
+
+```
+Dictionary
+
+↓
+
+Parameter Name
+
+↓
+
+Tensor
+```
+
+---
+
+# Example
+
+```python
+for key, value in model.state_dict().items():
+
+    print(key)
+```
+
+Output
+
+```
+fc1.weight
+
+fc1.bias
+
+fc2.weight
+
+fc2.bias
+```
+
+---
+
+# Why state_dict()?
+
+Instead of saving
+
+```
+Entire Model
+```
+
+PyTorch recommends saving only
+
+```
+Weights
+```
+
+Advantages
+
+✅ Smaller File
+
+✅ Portable
+
+✅ Faster
+
+✅ Recommended by PyTorch
+
+---
+
+# Saving Model
+
+Syntax
+
+```python
+torch.save(
+    model.state_dict(),
+    "model.pth"
+)
+```
+
+Example
+
+```python
+torch.save(
+
+    model.state_dict(),
+
+    "best_model.pth"
+)
+```
+
+Output
+
+```
+best_model.pth
+```
+
+---
+
+# What is .pth?
+
+`.pth`
+
+stands for
+
+```
+PyTorch File
+```
+
+Common extensions
+
+```
+.pth
+
+.pt
+
+.ckpt
+```
+
+All are commonly used in PyTorch projects.
+
+---
+
+# Loading Model
+
+Before loading,
+
+first create
+
+the model.
+
+```python
+model = SimpleNN()
+```
+
+Then
+
+```python
+model.load_state_dict(
+
+    torch.load("best_model.pth")
+)
+```
+
+Finally
+
+```python
+model.eval()
+```
+
+---
+
+# Why model.eval()?
+
+Loading weights
+
+doesn't automatically
+
+switch
+
+to inference mode.
+
+Always call
+
+```python
+model.eval()
+```
+
+before prediction.
+
+---
+
+# Saving Entire Model
+
+Possible
+
+```python
+torch.save(
+
+    model,
+
+    "model.pth"
+)
+```
+
+Loading
+
+```python
+model = torch.load(
+
+    "model.pth"
+)
+```
+
+---
+
+# Why Not Save Entire Model?
+
+Because
+
+Entire Model
+
+contains
+
+```
+Python Class
+
+File Structure
+
+Dependencies
+```
+
+Changing code later
+
+may break loading.
+
+Therefore
+
+PyTorch recommends
+
+```
+state_dict()
+```
+
+---
+
+# Saving Checkpoint
+
+Real projects
+
+save
+
+```
+Epoch
+
+Model
+
+Optimizer
+
+Loss
+```
+
+Example
+
+```python
+torch.save({
+
+    "epoch": epoch,
+
+    "model_state_dict":
+    model.state_dict(),
+
+    "optimizer_state_dict":
+    optimizer.state_dict(),
+
+    "loss": loss
+
+},
+
+"checkpoint.pth")
+```
+
+---
+
+# Loading Checkpoint
+
+```python
+checkpoint = torch.load(
+
+    "checkpoint.pth"
+)
+
+model.load_state_dict(
+
+    checkpoint["model_state_dict"]
+)
+
+optimizer.load_state_dict(
+
+    checkpoint["optimizer_state_dict"]
+)
+
+epoch = checkpoint["epoch"]
+
+loss = checkpoint["loss"]
+```
+
+Now
+
+training continues
+
+from the saved epoch.
+
+---
+
+# Resume Training
+
+```python
+for epoch in range(
+
+checkpoint["epoch"],
+
+100
+
+):
+```
+
+Instead of
+
+starting
+
+from
+
+```
+Epoch 0
+```
+
+training resumes
+
+from
+
+```
+Saved Epoch
+```
+
+---
+
+# Saving Best Model
+
+Suppose
+
+Validation Loss
+
+```
+0.35
+
+↓
+
+0.31
+
+↓
+
+0.28
+
+↓
+
+0.30
+```
+
+Best model
+
+is
+
+```
+0.28
+```
+
+Example
+
+```python
+if val_loss < best_loss:
+
+    best_loss = val_loss
+
+    torch.save(
+
+        model.state_dict(),
+
+        "best_model.pth"
+    )
+```
+
+---
+
+# Saving Optimizer
+
+Optimizer
+
+contains
+
+```
+Momentum
+
+Learning Rate
+
+Internal State
+```
+
+Always save
+
+```python
+optimizer.state_dict()
+```
+
+Otherwise
+
+training won't continue
+
+exactly where it stopped.
+
+---
+
+# Saving Multiple Models
+
+GAN Example
+
+```
+Generator
+
+↓
+
+Save
+
+Discriminator
+
+↓
+
+Save
+```
+
+```python
+torch.save({
+
+"generator":
+
+generator.state_dict(),
+
+"discriminator":
+
+discriminator.state_dict()
+
+},
+
+"gan.pth")
+```
+
+---
+
+# Saving Scheduler
+
+If using
+
+Learning Rate Scheduler
+
+also save
+
+```python
+scheduler.state_dict()
+```
+
+---
+
+# File Structure
+
+```
+Project
+
+│
+
+├── checkpoints/
+
+│      epoch10.pth
+
+│      epoch20.pth
+
+│
+
+├── best_model.pth
+
+│
+
+├── latest_model.pth
+
+│
+
+└── train.py
+```
+
+---
+
+# Inference Workflow
+
+```
+Load Model
+
+↓
+
+Load Weights
+
+↓
+
+model.eval()
+
+↓
+
+torch.no_grad()
+
+↓
+
+Prediction
+```
+
+Example
+
+```python
+model.load_state_dict(
+
+torch.load("best_model.pth")
+)
+
+model.eval()
+
+with torch.no_grad():
+
+    prediction = model(image)
+```
+
+---
+
+# Saving on GPU
+
+If model
+
+trained on GPU
+
+```python
+torch.save(
+
+model.state_dict(),
+
+"gpu_model.pth"
+)
+```
+
+Loading on CPU
+
+```python
+torch.load(
+
+"gpu_model.pth",
+
+map_location="cpu"
+)
+```
+
+Very useful
+
+when deployment
+
+doesn't have GPU.
+
+---
+
+# Save Checkpoint Every Epoch
+
+```python
+torch.save(
+
+model.state_dict(),
+
+f"epoch_{epoch}.pth"
+)
+```
+
+Output
+
+```
+epoch_1.pth
+
+epoch_2.pth
+
+epoch_3.pth
+```
+
+---
+
+# Common File Extensions
+
+| Extension | Purpose |
+|------------|----------|
+| .pth | Model Weights |
+| .pt | Model File |
+| .ckpt | Checkpoint |
+| .bin | Hugging Face Models |
+| .safetensors | Modern LLM Models |
+
+---
+
+# Relation with LLMs
+
+PyTorch
+
+```
+↓
+
+state_dict()
+
+↓
+
+Weights
+
+↓
+
+.safetensors
+
+↓
+
+Hugging Face
+```
+
+When you fine-tune
+
+```
+Llama
+
+Gemma
+
+Qwen
+```
+
+their weights are commonly saved as
+
+```
+.safetensors
+```
+
+because the format is designed to safely and efficiently store tensors.
+
+---
+
+# Best Practices
+
+✅ Save only
+
+```
+state_dict()
+```
+
+---
+
+✅ Save
+
+Best Model.
+
+---
+
+✅ Save Optimizer.
+
+---
+
+✅ Save Scheduler.
+
+---
+
+✅ Save Epoch Number.
+
+---
+
+✅ Save Validation Loss.
+
+---
+
+# Common Mistakes
+
+❌ Saving
+
+Entire Model
+
+instead of
+
+```
+state_dict()
+```
+
+---
+
+❌ Forgetting
+
+```python
+model.eval()
+```
+
+---
+
+❌ Forgetting
+
+Optimizer State.
+
+---
+
+❌ Not Saving
+
+Best Model.
+
+---
+
+❌ Overwriting
+
+Checkpoints.
+
+---
+
+# Cheat Sheet
+
+| Task | Code |
+|------|------|
+| Save Model | `torch.save(model.state_dict(),"model.pth")` |
+| Load Model | `model.load_state_dict(torch.load("model.pth"))` |
+| Save Optimizer | `optimizer.state_dict()` |
+| Save Checkpoint | `torch.save({...})` |
+| Resume Training | `optimizer.load_state_dict()` |
+| Inference | `model.eval()` |
+| Disable Gradients | `torch.no_grad()` |
+| GPU → CPU | `map_location="cpu"` |
+
+---
+
+# Summary
+
+- PyTorch recommends saving only the model's `state_dict()`.
+- Checkpoints should include the model, optimizer, epoch, and loss.
+- Use `model.eval()` before inference.
+- `torch.load(..., map_location="cpu")` helps load GPU-trained models on CPU-only machines.
+- Saving checkpoints regularly prevents losing training progress.
+- Modern LLMs commonly use formats such as `.safetensors` to store model weights.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is `state_dict()`?
+2. Why does PyTorch recommend saving `state_dict()` instead of the whole model?
+3. What should a checkpoint contain?
+4. Difference between `.pth` and `.safetensors`?
+5. Why call `model.eval()` after loading a model?
+6. How do you resume training from a checkpoint?
+7. What is `map_location="cpu"` used for?
+8. Why save the optimizer state?
+9. How do you save the best model during training?
+10. Why are checkpoints important for large models?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Save a trained model using `state_dict()`.
+
+---
+
+### Exercise 2
+
+Load the saved model and perform inference.
+
+---
+
+### Exercise 3
+
+Create a complete training checkpoint containing:
+
+- Model
+- Optimizer
+- Epoch
+- Loss
+
+---
+
+### Exercise 4
+
+Resume training from the saved checkpoint.
+
+---
+
+### Exercise 5
+
+Train a model on GPU (if available) and load it on CPU using `map_location="cpu"`.
+
+---
+
+
