@@ -12030,4 +12030,1118 @@ Train a model on GPU (if available) and load it on CPU using `map_location="cpu"
 
 ---
 
+# Module 12 – Learning Rate Scheduling (`torch.optim.lr_scheduler`)
 
+> **Goal:** Learn how Learning Rate Schedulers improve model training by automatically adjusting the learning rate during training.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why Learning Rate Matters
+- What is a Learning Rate Scheduler?
+- Why Not Use a Constant Learning Rate?
+- Types of Learning Rate Schedulers
+- StepLR
+- MultiStepLR
+- ExponentialLR
+- CosineAnnealingLR
+- ReduceLROnPlateau
+- CosineAnnealingWarmRestarts
+- LinearLR
+- SequentialLR
+- OneCycleLR
+- Warmup Scheduling
+- Scheduler Workflow
+- Complete Training Example
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you are driving from Mumbai to Pune.
+
+When you leave your home,
+
+you drive normally.
+
+```
+80 km/h
+```
+
+As you reach Pune city,
+
+you slow down.
+
+```
+40 km/h
+```
+
+Near your destination,
+
+```
+20 km/h
+```
+
+Why?
+
+Because driving at
+
+```
+80 km/h
+```
+
+inside the city
+
+would make you miss your destination.
+
+Deep Learning works exactly the same way.
+
+At the beginning,
+
+the model should take
+
+**large steps**
+
+to learn quickly.
+
+Later,
+
+it should take
+
+**small steps**
+
+to fine-tune the weights.
+
+This gradual adjustment is handled by a
+
+> **Learning Rate Scheduler**
+
+---
+
+# What is Learning Rate?
+
+Learning Rate determines
+
+```
+How much
+
+weights change
+
+after every update.
+```
+
+Formula
+
+```
+New Weight
+
+=
+
+Old Weight
+
+-
+
+Learning Rate
+
+×
+
+Gradient
+```
+
+Notation
+
+```
+lr
+```
+
+Example
+
+```python
+lr = 0.001
+```
+
+---
+
+# What Happens if Learning Rate is Too High?
+
+Suppose
+
+```
+Minimum Loss
+
+↓
+
+●
+```
+
+Instead of moving slowly,
+
+the optimizer keeps jumping
+
+from one side
+
+to another.
+
+```
+●     ●
+
+   X
+
+●     ●
+```
+
+Result
+
+❌ Doesn't Converge
+
+---
+
+# Too Small Learning Rate
+
+```
+Very Tiny Steps
+
+↓
+
+Very Slow Learning
+```
+
+Training may require
+
+thousands of epochs.
+
+---
+
+# Ideal Learning Rate
+
+```
+Large Steps
+
+↓
+
+Near Minimum
+
+↓
+
+Small Steps
+
+↓
+
+Converges
+```
+
+---
+
+# Why Use Learning Rate Scheduler?
+
+Instead of
+
+```
+LR = 0.001
+
+Forever
+```
+
+Schedulers automatically change
+
+```
+0.001
+
+↓
+
+0.0005
+
+↓
+
+0.0001
+
+↓
+
+0.00001
+```
+
+Advantages
+
+✅ Faster Training
+
+✅ Better Accuracy
+
+✅ Stable Optimization
+
+---
+
+# Scheduler Workflow
+
+```
+Forward Pass
+
+↓
+
+Loss
+
+↓
+
+Backward
+
+↓
+
+Optimizer Step
+
+↓
+
+Scheduler Step
+
+↓
+
+New Learning Rate
+```
+
+---
+
+# Creating Optimizer
+
+```python
+import torch.optim as optim
+
+optimizer = optim.Adam(
+
+    model.parameters(),
+
+    lr=0.001
+)
+```
+
+---
+
+# StepLR
+
+Most basic scheduler.
+
+Reduces learning rate
+
+after every
+
+fixed number
+
+of epochs.
+
+Example
+
+```python
+from torch.optim.lr_scheduler import StepLR
+
+scheduler = StepLR(
+
+    optimizer,
+
+    step_size=5,
+
+    gamma=0.1
+)
+```
+
+Meaning
+
+Every
+
+```
+5 Epochs
+```
+
+Learning Rate becomes
+
+```
+Old LR × 0.1
+```
+
+---
+
+# Example
+
+Initial LR
+
+```
+0.001
+```
+
+Epoch
+
+```
+1
+
+↓
+
+0.001
+```
+
+Epoch
+
+```
+5
+
+↓
+
+0.0001
+```
+
+Epoch
+
+```
+10
+
+↓
+
+0.00001
+```
+
+---
+
+# Using StepLR
+
+```python
+for epoch in range(20):
+
+    train()
+
+    scheduler.step()
+```
+
+---
+
+# MultiStepLR
+
+Instead of
+
+every
+
+5 epochs,
+
+reduce only at
+
+specific epochs.
+
+```python
+from torch.optim.lr_scheduler import MultiStepLR
+
+scheduler = MultiStepLR(
+
+optimizer,
+
+milestones=[10,20,30],
+
+gamma=0.1
+)
+```
+
+Learning Rate changes
+
+only at
+
+```
+Epoch
+
+10
+
+20
+
+30
+```
+
+---
+
+# ExponentialLR
+
+Reduce
+
+every epoch
+
+using exponential decay.
+
+```python
+from torch.optim.lr_scheduler import ExponentialLR
+
+scheduler = ExponentialLR(
+
+optimizer,
+
+gamma=0.95
+)
+```
+
+Formula
+
+```
+LR
+
+↓
+
+LR × 0.95
+
+↓
+
+LR × 0.95
+
+↓
+
+...
+```
+
+---
+
+# CosineAnnealingLR
+
+Very popular
+
+for CNNs
+
+and Transformers.
+
+Learning Rate follows
+
+Cosine Curve.
+
+```
+LR
+
+|
+
+|\
+| \
+|  \
+|   \
+|    \____
+
++------------
+
+Epoch
+```
+
+PyTorch
+
+```python
+from torch.optim.lr_scheduler import CosineAnnealingLR
+
+scheduler = CosineAnnealingLR(
+
+optimizer,
+
+T_max=20
+)
+```
+
+Advantages
+
+- Smooth decay
+- Better convergence
+- Used in modern research
+
+---
+
+# ReduceLROnPlateau
+
+One of the smartest schedulers.
+
+Instead of
+
+reducing every epoch,
+
+it watches
+
+```
+Validation Loss
+```
+
+If
+
+Validation Loss
+
+doesn't improve,
+
+Learning Rate decreases.
+
+```python
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+scheduler = ReduceLROnPlateau(
+
+optimizer,
+
+mode="min",
+
+factor=0.1,
+
+patience=3
+)
+```
+
+Meaning
+
+If validation loss
+
+doesn't improve
+
+for
+
+```
+3 Epochs
+```
+
+↓
+
+Reduce LR.
+
+---
+
+# Usage
+
+```python
+scheduler.step(
+
+validation_loss
+)
+```
+
+Unlike most schedulers,
+
+this one receives
+
+the validation metric.
+
+---
+
+# CosineAnnealingWarmRestarts
+
+Instead of continuously decreasing,
+
+learning rate periodically resets.
+
+```
+LR
+
+|\
+
+| \
+
+|  \
+
+|   \
+
+|    /\
+
+|   /  \
+
+|__/____\____
+```
+
+Useful
+
+for
+
+long training.
+
+---
+
+# LinearLR
+
+Changes
+
+Learning Rate
+
+linearly.
+
+```python
+scheduler = torch.optim.lr_scheduler.LinearLR(
+
+optimizer,
+
+start_factor=0.5,
+
+total_iters=5
+)
+```
+
+Often used during
+
+Warmup.
+
+---
+
+# OneCycleLR
+
+One of the most effective schedulers.
+
+Learning Rate
+
+```
+Increase
+
+↓
+
+Peak
+
+↓
+
+Decrease
+```
+
+PyTorch
+
+```python
+scheduler = torch.optim.lr_scheduler.OneCycleLR(
+
+optimizer,
+
+max_lr=0.01,
+
+epochs=10,
+
+steps_per_epoch=len(train_loader)
+)
+```
+
+Popular
+
+for
+
+CNN
+
+Vision
+
+Classification
+
+---
+
+# Warmup Scheduler
+
+Large Transformers
+
+usually don't start with
+
+high learning rate.
+
+Instead
+
+```
+0
+
+↓
+
+Small
+
+↓
+
+Medium
+
+↓
+
+Maximum
+
+↓
+
+Decay
+```
+
+Called
+
+```
+Learning Rate Warmup
+```
+
+Why?
+
+Prevents unstable updates
+
+during the initial training steps.
+
+Common in
+
+- BERT
+- GPT
+- Llama
+- Gemma
+- Qwen
+
+---
+
+# SequentialLR
+
+Combine
+
+multiple schedulers.
+
+Example
+
+```
+Warmup
+
+↓
+
+Cosine Decay
+```
+
+```python
+scheduler = torch.optim.lr_scheduler.SequentialLR(
+
+optimizer,
+
+schedulers=[warmup, cosine],
+
+milestones=[5]
+)
+```
+
+---
+
+# Complete Training Example
+
+```python
+optimizer = torch.optim.Adam(
+
+model.parameters(),
+
+lr=0.001
+)
+
+scheduler = StepLR(
+
+optimizer,
+
+step_size=5,
+
+gamma=0.1
+)
+
+for epoch in range(20):
+
+    model.train()
+
+    for images, labels in train_loader:
+
+        optimizer.zero_grad()
+
+        outputs = model(images)
+
+        loss = criterion(outputs, labels)
+
+        loss.backward()
+
+        optimizer.step()
+
+    scheduler.step()
+
+    print(
+
+    optimizer.param_groups[0]["lr"]
+
+    )
+```
+
+---
+
+# Visual Flow
+
+```
+Forward
+
+↓
+
+Loss
+
+↓
+
+Backward
+
+↓
+
+Optimizer
+
+↓
+
+Scheduler
+
+↓
+
+Next Epoch
+```
+
+---
+
+# Checking Current Learning Rate
+
+```python
+print(
+
+optimizer.param_groups[0]["lr"]
+
+)
+```
+
+Output
+
+```
+0.001
+```
+
+---
+
+# Optimizer vs Scheduler
+
+| Optimizer | Scheduler |
+|------------|------------|
+| Updates Weights | Updates Learning Rate |
+| Uses Gradients | Uses Epoch or Metric |
+| Every Iteration | Every Epoch (usually) |
+
+---
+
+# Which Scheduler Should I Use?
+
+| Problem | Scheduler |
+|----------|------------|
+| Beginner Projects | StepLR |
+| CNN | CosineAnnealingLR |
+| Vision Transformer | CosineAnnealingLR |
+| Transformer | Warmup + Cosine |
+| LLM Training | Warmup + Cosine |
+| Validation Based | ReduceLROnPlateau |
+
+---
+
+# Real World Usage
+
+| Model | Scheduler |
+|---------|------------|
+| ResNet | StepLR / Cosine |
+| EfficientNet | Cosine |
+| ViT | Cosine |
+| BERT | Linear Warmup |
+| GPT | Cosine + Warmup |
+| Llama | Cosine + Warmup |
+| Gemma | Cosine + Warmup |
+| Qwen | Cosine + Warmup |
+
+---
+
+# Best Practices
+
+✅ Monitor Learning Rate.
+
+✅ Don't use
+
+very large
+
+Learning Rate.
+
+✅ Use Warmup
+
+for Transformers.
+
+✅ Use Cosine Scheduler
+
+for Deep Learning.
+
+✅ Save Scheduler
+
+inside checkpoint.
+
+---
+
+# Saving Scheduler
+
+```python
+torch.save({
+
+"model":
+
+model.state_dict(),
+
+"optimizer":
+
+optimizer.state_dict(),
+
+"scheduler":
+
+scheduler.state_dict()
+
+},
+
+"checkpoint.pth")
+```
+
+Loading
+
+```python
+scheduler.load_state_dict(
+
+checkpoint["scheduler"]
+)
+```
+
+---
+
+# Common Mistakes
+
+❌ Forgetting
+
+```python
+scheduler.step()
+```
+
+---
+
+❌ Calling scheduler
+
+before optimizer
+
+(for schedulers designed to step after optimizer updates or after each epoch).
+
+---
+
+❌ Using
+
+ReduceLROnPlateau
+
+without passing
+
+validation loss.
+
+---
+
+❌ Forgetting
+
+to save scheduler state.
+
+---
+
+# Cheat Sheet
+
+| Scheduler | Best Use |
+|------------|-----------|
+| StepLR | Simple Projects |
+| MultiStepLR | Fixed Milestones |
+| ExponentialLR | Smooth Decay |
+| CosineAnnealingLR | CNN, ViT |
+| ReduceLROnPlateau | Validation Based |
+| OneCycleLR | Fast Training |
+| Warmup | Transformers |
+| SequentialLR | Combine Multiple Schedulers |
+
+---
+
+# Summary
+
+- Learning Rate controls the step size during optimization.
+- Learning Rate Schedulers automatically adjust the learning rate.
+- StepLR decreases the learning rate at fixed intervals.
+- MultiStepLR changes the learning rate at specific milestones.
+- CosineAnnealingLR provides smooth decay and is widely used in modern deep learning.
+- ReduceLROnPlateau reacts to validation performance.
+- Warmup is commonly used for Transformer and LLM training.
+- Saving the scheduler state is important when resuming training.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is a Learning Rate Scheduler?
+
+2. Why not keep the Learning Rate constant?
+
+3. Difference between StepLR and MultiStepLR?
+
+4. When should you use ReduceLROnPlateau?
+
+5. What is CosineAnnealingLR?
+
+6. Why is Warmup important for Transformers?
+
+7. Difference between Optimizer and Scheduler?
+
+8. Why save the Scheduler state?
+
+9. What is OneCycleLR?
+
+10. Which scheduler is commonly used for LLM training?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Train a model using
+
+```
+StepLR
+```
+
+---
+
+### Exercise 2
+
+Replace
+
+```
+StepLR
+
+↓
+
+CosineAnnealingLR
+```
+
+Compare
+
+- Training Loss
+
+- Validation Loss
+
+---
+
+### Exercise 3
+
+Implement
+
+```
+ReduceLROnPlateau
+```
+
+using
+
+Validation Loss.
+
+---
+
+### Exercise 4
+
+Print
+
+Learning Rate
+
+after every epoch.
+
+---
+
+### Exercise 5
+
+Save
+
+Optimizer
+
++
+
+Scheduler
+
++
+
+Model
+
+inside one checkpoint.
+
+---
