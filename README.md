@@ -14062,3 +14062,1138 @@ Train only the new classifier.
 Unfreeze the final ResNet block and compare the results with feature extraction.
 
 ---
+
+
+# Module 14 – Convolutional Neural Networks (CNNs)
+
+> **Goal:** Learn how Convolutional Neural Networks work from scratch, understand every CNN component mathematically and intuitively, and build your first image classifier using PyTorch.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- Why CNN?
+- Why Not Fully Connected Networks?
+- What is an Image?
+- Pixels & Channels
+- Feature Extraction
+- What is a Convolution?
+- Kernel (Filter)
+- Feature Map
+- Stride
+- Padding
+- Pooling
+- Max Pooling
+- Average Pooling
+- CNN Architecture
+- Building a CNN in PyTorch
+- CNN Training Example
+- Popular CNN Architectures
+- CNN vs Transformer
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine someone shows you this image.
+
+🐱 Cat
+
+Do you analyze
+
+```
+Every Pixel
+
+at the same time?
+```
+
+No.
+
+First,
+
+your eyes notice
+
+```
+Edges
+
+↓
+
+Shapes
+
+↓
+
+Eyes
+
+↓
+
+Ears
+
+↓
+
+Face
+
+↓
+
+Entire Cat
+```
+
+Humans recognize objects
+
+hierarchically.
+
+CNNs do exactly the same thing.
+
+Instead of memorizing pixels,
+
+they learn
+
+small visual patterns first,
+
+then combine them into
+
+complex objects.
+
+---
+
+# What is an Image?
+
+A computer doesn't see
+
+```
+Dog
+
+Cat
+
+Car
+```
+
+It only sees
+
+Numbers.
+
+Example
+
+Grayscale Image
+
+```
+28 × 28
+```
+
+Meaning
+
+```
+784 Pixels
+```
+
+Each pixel stores
+
+```
+0
+
+↓
+
+255
+```
+
+Example
+
+```
+0
+
+Black
+```
+
+```
+255
+
+White
+```
+
+---
+
+# RGB Images
+
+Color images contain
+
+3 channels.
+
+```
+Red
+
+Green
+
+Blue
+```
+
+Shape
+
+```
+Height
+
+×
+
+Width
+
+×
+
+Channels
+```
+
+Example
+
+```
+224 × 224 × 3
+```
+
+PyTorch stores images as
+
+```
+Channels
+
+×
+
+Height
+
+×
+
+Width
+```
+
+Example
+
+```
+3 × 224 × 224
+```
+
+---
+
+# Why Not Use Fully Connected Layers?
+
+Suppose
+
+Input Image
+
+```
+224 × 224 × 3
+```
+
+Total Pixels
+
+```
+224 × 224 × 3
+
+=
+
+150,528
+```
+
+A single Linear Layer
+
+```
+150528
+
+↓
+
+1000
+```
+
+Parameters
+
+```
+150 Million+
+
+Weights
+```
+
+Problems
+
+❌ Huge Memory
+
+❌ Slow
+
+❌ Overfitting
+
+❌ Ignores Spatial Information
+
+CNN solves all these problems.
+
+---
+
+# What is a Convolution?
+
+Convolution means
+
+> Sliding a small filter over an image to detect patterns.
+
+Example
+
+```
+Image
+
+□□□□□□□□
+
+Kernel
+
+■■■
+■■■
+■■■
+
+↓
+
+Move
+
+↓
+
+Move
+
+↓
+
+Move
+```
+
+Instead of looking at the whole image,
+
+CNN looks at
+
+small regions.
+
+---
+
+# What is a Kernel (Filter)?
+
+Kernel
+
+=
+
+Small Matrix
+
+Example
+
+```
+3 × 3
+
+5 × 5
+
+7 × 7
+```
+
+Example
+
+```
+1 0 -1
+
+1 0 -1
+
+1 0 -1
+```
+
+This kernel detects
+
+Vertical Edges.
+
+Different kernels learn
+
+- Edges
+- Corners
+- Curves
+- Textures
+- Shapes
+
+---
+
+# Feature Map
+
+After convolution,
+
+we get
+
+```
+Feature Map
+```
+
+Example
+
+```
+Image
+
+↓
+
+Convolution
+
+↓
+
+Feature Map
+```
+
+The feature map highlights
+
+important regions
+
+of the image.
+
+---
+
+# Stride
+
+Stride
+
+means
+
+```
+How many pixels
+
+the filter moves.
+```
+
+Example
+
+Stride = 1
+
+```
+□□□□□
+
+■■■
+
+↓
+
+Move
+
+1 Pixel
+```
+
+Stride = 2
+
+```
+Move
+
+2 Pixels
+```
+
+Higher Stride
+
+↓
+
+Smaller Output
+
+↓
+
+Less Computation
+
+---
+
+# Padding
+
+Without Padding
+
+Image Size
+
+keeps shrinking.
+
+Example
+
+```
+5 × 5
+
+↓
+
+3 × 3
+
+↓
+
+1 × 1
+```
+
+Padding
+
+adds
+
+Zeros
+
+around
+
+the image.
+
+Example
+
+```
+000000
+
+011110
+
+011110
+
+011110
+
+000000
+```
+
+Advantages
+
+✅ Preserve Image Size
+
+✅ Better Edge Detection
+
+---
+
+# Pooling
+
+Pooling
+
+reduces
+
+image size
+
+while preserving
+
+important information.
+
+Benefits
+
+- Faster Training
+- Less Memory
+- Less Overfitting
+
+---
+
+# Max Pooling
+
+Most common pooling.
+
+Example
+
+```
+2 5
+
+7 1
+
+↓
+
+7
+```
+
+PyTorch
+
+```python
+pool = nn.MaxPool2d(
+
+kernel_size=2,
+
+stride=2
+)
+```
+
+---
+
+# Average Pooling
+
+Instead of
+
+Maximum
+
+calculate
+
+Average.
+
+```
+2 4
+
+6 8
+
+↓
+
+5
+```
+
+Used less often than Max Pooling.
+
+---
+
+# CNN Workflow
+
+```
+Image
+
+↓
+
+Convolution
+
+↓
+
+ReLU
+
+↓
+
+Pooling
+
+↓
+
+Convolution
+
+↓
+
+ReLU
+
+↓
+
+Pooling
+
+↓
+
+Flatten
+
+↓
+
+Linear Layer
+
+↓
+
+Prediction
+```
+
+---
+
+# First CNN in PyTorch
+
+```python
+import torch
+import torch.nn as nn
+
+class CNN(nn.Module):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(
+
+            in_channels=3,
+
+            out_channels=16,
+
+            kernel_size=3,
+
+            padding=1
+
+        )
+
+        self.pool = nn.MaxPool2d(2,2)
+
+        self.conv2 = nn.Conv2d(
+
+            16,
+
+            32,
+
+            3,
+
+            padding=1
+
+        )
+
+        self.fc = nn.Linear(
+
+            32 * 56 * 56,
+
+            10
+
+        )
+
+    def forward(self,x):
+
+        x = self.pool(
+
+            torch.relu(
+
+                self.conv1(x)
+            )
+        )
+
+        x = self.pool(
+
+            torch.relu(
+
+                self.conv2(x)
+            )
+        )
+
+        x = torch.flatten(x,1)
+
+        x = self.fc(x)
+
+        return x
+```
+
+---
+
+# Understanding Conv2d
+
+```python
+nn.Conv2d(
+
+in_channels=3,
+
+out_channels=32,
+
+kernel_size=3,
+
+stride=1,
+
+padding=1
+)
+```
+
+Meaning
+
+```
+Input
+
+↓
+
+3 Channels
+
+↓
+
+32 Filters
+
+↓
+
+Output
+
+32 Feature Maps
+```
+
+---
+
+# Flatten Layer
+
+CNN Output
+
+```
+32
+
+×
+
+56
+
+×
+
+56
+```
+
+Linear Layer
+
+expects
+
+```
+1D Vector
+```
+
+Flatten converts
+
+```
+3D
+
+↓
+
+1D
+```
+
+PyTorch
+
+```python
+x = torch.flatten(
+
+x,
+
+1
+)
+```
+
+---
+
+# Forward Pass
+
+```python
+images = torch.randn(
+
+8,
+
+3,
+
+224,
+
+224
+)
+
+model = CNN()
+
+outputs = model(images)
+
+print(outputs.shape)
+```
+
+Output
+
+```
+torch.Size([8,10])
+```
+
+Meaning
+
+```
+8 Images
+
+↓
+
+10 Classes
+```
+
+---
+
+# Training CNN
+
+```python
+criterion = nn.CrossEntropyLoss()
+
+optimizer = torch.optim.Adam(
+
+model.parameters(),
+
+lr=0.001
+)
+
+for epoch in range(5):
+
+    for images,labels in train_loader:
+
+        optimizer.zero_grad()
+
+        outputs=model(images)
+
+        loss=criterion(outputs,labels)
+
+        loss.backward()
+
+        optimizer.step()
+```
+
+---
+
+# CNN Architecture Evolution
+
+### LeNet (1998)
+
+- First successful CNN
+- Handwritten digit recognition
+
+---
+
+### AlexNet (2012)
+
+- Won ImageNet
+- Started Deep Learning revolution
+
+---
+
+### VGG16
+
+- Very deep network
+- Simple architecture
+
+---
+
+### GoogLeNet (Inception)
+
+- Parallel convolutions
+- More efficient computation
+
+---
+
+### ResNet
+
+Introduced
+
+```
+Skip Connections
+```
+
+Solved
+
+```
+Vanishing Gradient
+```
+
+One of the most influential CNN architectures.
+
+---
+
+### EfficientNet
+
+Uses
+
+```
+Compound Scaling
+```
+
+Balances
+
+- Width
+- Depth
+- Resolution
+
+---
+
+# CNN vs Fully Connected Network
+
+| Fully Connected | CNN |
+|-----------------|-----|
+| Huge Parameters | Few Parameters |
+| Slow | Faster |
+| Ignores Spatial Info | Preserves Spatial Info |
+| Overfits Easily | Better Generalization |
+| Poor for Images | Excellent for Images |
+
+---
+
+# CNN vs Vision Transformer (ViT)
+
+| CNN | Vision Transformer |
+|------|--------------------|
+| Convolutions | Self-Attention |
+| Local Features | Global Relationships |
+| Faster on Small Data | Excels on Large Datasets |
+| Inductive Bias | Learns Relationships from Data |
+
+---
+
+# Applications
+
+CNNs are used in
+
+- Face Recognition
+- Medical Imaging
+- Object Detection
+- Self Driving Cars
+- OCR
+- Satellite Image Analysis
+- Defect Detection
+- Image Classification
+
+---
+
+# Best Practices
+
+✅ Normalize Images
+
+✅ Use Data Augmentation
+
+✅ Use Batch Normalization
+
+✅ Use Dropout
+
+✅ Start with Pretrained Models
+
+---
+
+# Common Mistakes
+
+❌ Forgetting to normalize images.
+
+❌ Using a very large learning rate.
+
+❌ Ignoring image size changes after pooling.
+
+❌ Feeding incorrectly shaped tensors.
+
+❌ Overfitting due to a small dataset.
+
+---
+
+# Cheat Sheet
+
+| Layer | Purpose |
+|---------|----------|
+| Conv2d | Feature Extraction |
+| ReLU | Non-linearity |
+| MaxPool2d | Downsampling |
+| Flatten | Convert Feature Maps to Vector |
+| Linear | Classification |
+| Softmax | Output Probabilities (typically applied during inference; `CrossEntropyLoss` expects raw logits) |
+
+---
+
+# 🤖 How CNNs Work Internally
+
+```
+Image
+
+↓
+
+Edges
+
+↓
+
+Corners
+
+↓
+
+Textures
+
+↓
+
+Shapes
+
+↓
+
+Object Parts
+
+↓
+
+Entire Object
+
+↓
+
+Classification
+```
+
+Every deeper layer
+
+learns
+
+more complex
+
+features.
+
+---
+
+# Relation with LLMs
+
+CNN
+
+```
+Image
+
+↓
+
+Convolution
+
+↓
+
+Prediction
+```
+
+Transformer
+
+```
+Sentence
+
+↓
+
+Attention
+
+↓
+
+Prediction
+```
+
+Both extract features,
+
+but use different mechanisms.
+
+CNNs focus on
+
+local neighborhoods,
+
+while Transformers use
+
+self-attention
+
+to model relationships across the entire input.
+
+---
+
+# Summary
+
+- CNNs are specialized neural networks for image data.
+- Convolution extracts local features such as edges and textures.
+- Kernels slide over images to produce feature maps.
+- Stride controls movement; padding controls output size.
+- Pooling reduces computation while preserving important information.
+- Modern CNNs build increasingly complex representations through multiple convolutional layers.
+- PyTorch provides `nn.Conv2d`, `nn.MaxPool2d`, and related layers to build CNNs efficiently.
+
+---
+
+# 🎤 Interview Questions
+
+1. Why are CNNs better than Fully Connected Networks for images?
+2. What is a convolution?
+3. What is a kernel?
+4. What is the purpose of padding?
+5. What is stride?
+6. Difference between Max Pooling and Average Pooling?
+7. Why do we flatten feature maps?
+8. What problem did ResNet solve?
+9. Difference between CNN and Vision Transformer?
+10. What are feature maps?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Build a CNN with:
+
+- 2 Convolution Layers
+- 2 MaxPool Layers
+- 1 Fully Connected Layer
+
+---
+
+### Exercise 2
+
+Train the CNN on CIFAR-10.
+
+---
+
+### Exercise 3
+
+Experiment with:
+
+- Kernel Size = 3
+- Kernel Size = 5
+
+Compare the results.
+
+---
+
+### Exercise 4
+
+Change:
+
+```
+Stride
+
+1
+
+↓
+
+2
+```
+
+Observe how the output size changes.
+
+---
+
+### Exercise 5
+
+Replace Max Pooling with Average Pooling and compare model performance.
+
+---
