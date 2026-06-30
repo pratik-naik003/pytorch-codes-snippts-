@@ -6232,3 +6232,1418 @@ This is useful for advanced research and custom mathematical operations.
 5. Build a tiny linear model and inspect gradients after one training step.
 
 ---
+
+# Module 5 – Building Neural Networks with `torch.nn`
+
+> **Goal:** Learn how to build neural networks in PyTorch using the `torch.nn` module.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is `torch.nn`?
+- Why Use `torch.nn`?
+- `nn.Module`
+- Building Your First Neural Network
+- Layers
+- Activation Functions
+- Forward Pass
+- Model Parameters
+- Model Summary
+- `nn.Sequential`
+- Custom Neural Networks
+- Training Workflow
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Introduction
+
+So far, you've learned:
+
+- Tensors
+- CUDA
+- Autograd
+
+Now it's time to build **actual neural networks**.
+
+Without `torch.nn`, you would have to manually create:
+
+- Weights
+- Biases
+- Forward functions
+- Gradient calculations
+
+PyTorch simplifies all of this with the **`torch.nn`** module.
+
+---
+
+# What is `torch.nn`?
+
+`torch.nn` is a module that provides everything required to build neural networks.
+
+It includes:
+
+- Layers
+- Activation Functions
+- Loss Functions
+- Containers
+- Model Utilities
+
+Instead of writing neural networks from scratch, we use ready-made building blocks.
+
+---
+
+# Why Use `torch.nn`?
+
+Without `torch.nn`
+
+```text
+Create Weights
+
+↓
+
+Create Biases
+
+↓
+
+Write Forward Pass
+
+↓
+
+Compute Gradients
+
+↓
+
+Update Parameters
+```
+
+With `torch.nn`
+
+```text
+Define Layers
+
+↓
+
+Write Forward()
+
+↓
+
+Train Model
+```
+
+PyTorch automatically manages parameters and integrates with Autograd.
+
+---
+
+# What is `nn.Module`?
+
+Every neural network in PyTorch inherits from `nn.Module`.
+
+Think of `nn.Module` as the **base class** for all models.
+
+```python
+import torch.nn as nn
+
+class MyModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x
+```
+
+Every custom model starts like this.
+
+---
+
+# Structure of an `nn.Module`
+
+Every model has two main methods:
+
+## 1. `__init__()`
+
+Used to define:
+
+- Layers
+- Trainable Parameters
+
+## 2. `forward()`
+
+Defines how data flows through the model.
+
+```text
+Input
+
+↓
+
+Layer 1
+
+↓
+
+Activation
+
+↓
+
+Layer 2
+
+↓
+
+Output
+```
+
+---
+
+# Your First Neural Network
+
+```python
+import torch
+import torch.nn as nn
+
+class SimpleNN(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+        self.fc1 = nn.Linear(4, 8)
+        self.fc2 = nn.Linear(8, 2)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.fc2(x)
+        return x
+```
+
+---
+
+# Creating the Model
+
+```python
+model = SimpleNN()
+
+print(model)
+```
+
+Output
+
+```text
+SimpleNN(
+  (fc1): Linear(in_features=4, out_features=8)
+  (fc2): Linear(in_features=8, out_features=2)
+)
+```
+
+---
+
+# What is a Layer?
+
+A layer transforms input data into another representation.
+
+Example:
+
+```text
+Input
+
+↓
+
+Linear Layer
+
+↓
+
+Activation
+
+↓
+
+Output
+```
+
+Common layers:
+
+- `nn.Linear`
+- `nn.Conv2d`
+- `nn.Embedding`
+- `nn.LSTM`
+- `nn.BatchNorm`
+- `nn.Dropout`
+
+---
+
+# Linear Layer
+
+The most basic layer.
+
+Mathematical equation:
+
+\[
+y = Wx + b
+\]
+
+PyTorch:
+
+```python
+layer = nn.Linear(5, 3)
+```
+
+Meaning:
+
+- 5 input features
+- 3 output features
+
+---
+
+# Passing Data Through a Layer
+
+```python
+import torch
+
+x = torch.randn(2, 5)
+
+layer = nn.Linear(5, 3)
+
+output = layer(x)
+
+print(output.shape)
+```
+
+Output:
+
+```text
+torch.Size([2, 3])
+```
+
+---
+
+# Activation Functions
+
+A neural network without activation functions behaves like a single linear transformation.
+
+Activation functions introduce **non-linearity**.
+
+Common activations:
+
+| Function | Use Case |
+|----------|----------|
+| ReLU | Most common |
+| Sigmoid | Binary classification |
+| Tanh | Older networks |
+| GELU | Transformers |
+| Softmax | Multi-class output |
+
+---
+
+# ReLU
+
+```python
+relu = nn.ReLU()
+
+x = torch.tensor([-2.0, 0.0, 3.0])
+
+print(relu(x))
+```
+
+Output
+
+```text
+tensor([0., 0., 3.])
+```
+
+Formula:
+
+\[
+ReLU(x)=\max(0,x)
+\]
+
+---
+
+# Sigmoid
+
+Maps values between **0 and 1**.
+
+```python
+sigmoid = nn.Sigmoid()
+```
+
+Commonly used for binary classification.
+
+---
+
+# Softmax
+
+Converts outputs into probabilities.
+
+```python
+softmax = nn.Softmax(dim=1)
+```
+
+Example:
+
+```text
+Before
+
+[2.1, 1.3, 0.5]
+
+↓
+
+After
+
+[0.62, 0.27, 0.11]
+```
+
+---
+
+# GELU
+
+Used in modern Transformer models like:
+
+- BERT
+- GPT
+- Llama
+- Gemma
+- Qwen
+
+```python
+gelu = nn.GELU()
+```
+
+---
+
+# Forward Pass
+
+The `forward()` function defines how input flows through the network.
+
+```python
+def forward(self, x):
+
+    x = self.fc1(x)
+
+    x = torch.relu(x)
+
+    x = self.fc2(x)
+
+    return x
+```
+
+Never call `forward()` directly.
+
+Instead:
+
+```python
+output = model(x)
+```
+
+PyTorch automatically calls `forward()`.
+
+---
+
+# Model Parameters
+
+Every layer has trainable parameters.
+
+Print them:
+
+```python
+for name, param in model.named_parameters():
+    print(name, param.shape)
+```
+
+Example output:
+
+```text
+fc1.weight torch.Size([8,4])
+fc1.bias torch.Size([8])
+fc2.weight torch.Size([2,8])
+fc2.bias torch.Size([2])
+```
+
+---
+
+# Counting Parameters
+
+```python
+total = sum(p.numel() for p in model.parameters())
+
+print(total)
+```
+
+Useful for comparing model sizes.
+
+---
+
+# Using `nn.Sequential`
+
+For simple networks:
+
+```python
+model = nn.Sequential(
+
+    nn.Linear(4,8),
+
+    nn.ReLU(),
+
+    nn.Linear(8,2)
+)
+```
+
+Advantages:
+
+- Short
+- Clean
+- Easy to read
+
+Limitations:
+
+- Less flexible than custom classes.
+
+---
+
+# Custom Neural Networks
+
+Preferred for real-world projects.
+
+```python
+class Classifier(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+        self.features = nn.Linear(10, 20)
+
+        self.output = nn.Linear(20, 3)
+
+    def forward(self, x):
+
+        x = torch.relu(self.features(x))
+
+        return self.output(x)
+```
+
+---
+
+# Typical Training Workflow
+
+```text
+Input Data
+
+↓
+
+Model
+
+↓
+
+Prediction
+
+↓
+
+Loss Function
+
+↓
+
+loss.backward()
+
+↓
+
+Optimizer.step()
+
+↓
+
+Updated Weights
+```
+
+---
+
+# Example Workflow
+
+```python
+model = SimpleNN()
+
+criterion = nn.CrossEntropyLoss()
+
+optimizer = torch.optim.Adam(
+    model.parameters(),
+    lr=0.001
+)
+```
+
+Training:
+
+```python
+output = model(x)
+
+loss = criterion(output, y)
+
+optimizer.zero_grad()
+
+loss.backward()
+
+optimizer.step()
+```
+
+---
+
+# Model Modes
+
+Training mode:
+
+```python
+model.train()
+```
+
+Evaluation mode:
+
+```python
+model.eval()
+```
+
+Why?
+
+Some layers behave differently during training and inference.
+
+Examples:
+
+- Dropout
+- BatchNorm
+
+---
+
+# Saving Model
+
+```python
+torch.save(
+    model.state_dict(),
+    "model.pth"
+)
+```
+
+Loading:
+
+```python
+model.load_state_dict(
+    torch.load("model.pth")
+)
+```
+
+---
+
+# Best Practices
+
+✅ Inherit from `nn.Module`
+
+✅ Keep layers inside `__init__()`
+
+✅ Define computations only inside `forward()`
+
+✅ Use `model(x)` instead of `model.forward(x)`
+
+✅ Call `model.train()` during training
+
+✅ Call `model.eval()` during inference
+
+---
+
+# Common Mistakes
+
+❌ Forgetting `super().__init__()`
+
+❌ Creating layers inside `forward()`
+
+❌ Calling `forward()` directly
+
+❌ Forgetting `model.eval()` during inference
+
+❌ Forgetting `optimizer.zero_grad()`
+
+---
+
+# Summary
+
+- `torch.nn` provides building blocks for neural networks.
+- Every model inherits from `nn.Module`.
+- Layers are defined in `__init__()`.
+- The computation is defined in `forward()`.
+- `nn.Linear` performs linear transformations.
+- Activation functions introduce non-linearity.
+- `nn.Sequential` is useful for simple models.
+- Custom classes are preferred for complex architectures.
+- Parameters are updated using the optimizer after backpropagation.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is `nn.Module`?
+2. Why do we inherit from `nn.Module`?
+3. What is the difference between `__init__()` and `forward()`?
+4. Why should we use `model(x)` instead of `model.forward(x)`?
+5. What does `nn.Linear` do?
+6. Why are activation functions important?
+7. When should you use `nn.Sequential`?
+8. What is the purpose of `model.train()` and `model.eval()`?
+9. How do you count the number of trainable parameters?
+10. How do you save and load a PyTorch model?
+
+---
+
+# 📝 Exercises
+
+1. Build a neural network with:
+   - Input: 10 features
+   - Hidden Layer: 32 neurons
+   - Output: 5 classes
+
+2. Print all model parameters and their shapes.
+
+3. Count the total number of trainable parameters.
+
+4. Replace `ReLU` with `GELU` and observe the code changes.
+
+5. Build the same network using `nn.Sequential`.
+
+-
+# Module 6 – Loss Functions (`torch.nn`)
+
+> **Goal:** Learn what loss functions are, why they are important, how they work mathematically, and how to use them correctly in PyTorch.
+
+---
+
+# 📚 Table of Contents
+
+- Introduction
+- What is a Loss Function?
+- Why Do We Need Loss Functions?
+- Loss vs Cost
+- How Training Works
+- Regression Losses
+- Classification Losses
+- Binary Classification Losses
+- Cross Entropy Loss
+- BCE Loss
+- BCEWithLogitsLoss
+- MSE Loss
+- L1 Loss
+- Huber Loss
+- KL Divergence Loss
+- Choosing the Right Loss Function
+- Best Practices
+- Common Mistakes
+- Summary
+- Interview Questions
+- Exercises
+
+---
+
+# 📖 Story
+
+Imagine you're teaching a child to solve math problems.
+
+The child answers
+
+```
+5 + 5 = 12
+```
+
+You immediately know
+
+```
+Wrong Answer
+```
+
+But the child asks
+
+> "How wrong am I?"
+
+Simply saying
+
+```
+Wrong
+```
+
+isn't enough.
+
+You need to tell
+
+- How far from the correct answer
+- Whether the answer is improving
+- Whether learning is happening
+
+Deep Learning works exactly the same way.
+
+The neural network makes a prediction.
+
+Now we need a mathematical function that tells
+
+```
+How bad
+
+or
+
+How good
+
+the prediction is.
+```
+
+That function is called the
+
+> **Loss Function**
+
+---
+
+# What is Loss?
+
+Loss measures
+
+> **The difference between the predicted output and the actual output.**
+
+Smaller Loss
+
+↓
+
+Better Prediction
+
+Larger Loss
+
+↓
+
+Poor Prediction
+
+Goal of every neural network
+
+```
+Minimize Loss
+```
+
+---
+
+# Training Pipeline
+
+```
+Input
+
+↓
+
+Model
+
+↓
+
+Prediction
+
+↓
+
+Loss Function
+
+↓
+
+Loss
+
+↓
+
+Backward()
+
+↓
+
+Optimizer
+
+↓
+
+Update Weights
+```
+
+Without a loss function
+
+the neural network
+
+cannot learn.
+
+---
+
+# Example
+
+Suppose
+
+Actual House Price
+
+```
+₹50,00,000
+```
+
+Prediction
+
+```
+₹49,80,000
+```
+
+Loss
+
+Small
+
+Now
+
+Prediction
+
+```
+₹10,00,000
+```
+
+Loss
+
+Very Large
+
+The optimizer will try to reduce this error.
+
+---
+
+# Loss vs Cost
+
+People often use these terms interchangeably.
+
+Technically
+
+Loss
+
+```
+One Training Example
+```
+
+Cost
+
+```
+Average Loss
+
+Entire Dataset
+```
+
+Most libraries simply call everything
+
+```
+Loss
+```
+
+---
+
+# Types of Problems
+
+Machine Learning problems are mainly divided into
+
+```
+Regression
+
+Classification
+```
+
+Different problems require different loss functions.
+
+---
+
+# Regression Losses
+
+Used when predicting
+
+continuous values.
+
+Examples
+
+- House Price
+- Temperature
+- Salary
+- Stock Price
+
+Popular Losses
+
+- MSELoss
+- L1Loss
+- SmoothL1Loss
+
+---
+
+# Classification Losses
+
+Used when predicting
+
+categories.
+
+Examples
+
+- Dog vs Cat
+- Spam Detection
+- Digit Recognition
+- Disease Detection
+
+Popular Losses
+
+- CrossEntropyLoss
+- BCELoss
+- BCEWithLogitsLoss
+- NLLLoss
+
+---
+
+# Mean Squared Error (MSELoss)
+
+Most common regression loss.
+
+Formula
+
+\[
+MSE=\frac1n\sum(y-\hat y)^2
+\]
+
+PyTorch
+
+```python
+import torch
+import torch.nn as nn
+
+criterion = nn.MSELoss()
+
+prediction = torch.tensor([2.5])
+
+target = torch.tensor([3.0])
+
+loss = criterion(prediction, target)
+
+print(loss)
+```
+
+Advantages
+
+✅ Easy
+
+✅ Smooth
+
+Disadvantages
+
+❌ Sensitive to outliers
+
+---
+
+# L1 Loss (Mean Absolute Error)
+
+Formula
+
+\[
+|y-\hat y|
+\]
+
+PyTorch
+
+```python
+criterion = nn.L1Loss()
+```
+
+Advantages
+
+- Robust to outliers
+
+Disadvantages
+
+- Less smooth gradients
+
+---
+
+# SmoothL1Loss (Huber Loss)
+
+Combination of
+
+```
+MSE
+
++
+
+L1
+```
+
+PyTorch
+
+```python
+criterion = nn.SmoothL1Loss()
+```
+
+Used in
+
+- Object Detection
+- Bounding Box Regression
+
+---
+
+# Binary Classification
+
+Example
+
+```
+Spam
+
+Not Spam
+```
+
+Only two classes.
+
+Popular losses
+
+- BCELoss
+- BCEWithLogitsLoss
+
+---
+
+# BCELoss
+
+Used after
+
+```
+Sigmoid
+```
+
+Example
+
+```python
+model
+
+↓
+
+Sigmoid
+
+↓
+
+BCELoss
+```
+
+PyTorch
+
+```python
+criterion = nn.BCELoss()
+```
+
+---
+
+# BCEWithLogitsLoss
+
+Recommended instead of BCELoss.
+
+Why?
+
+It combines
+
+```
+Sigmoid
+
++
+
+BCELoss
+```
+
+into one stable operation.
+
+PyTorch
+
+```python
+criterion = nn.BCEWithLogitsLoss()
+```
+
+Advantages
+
+- Numerically Stable
+- Faster
+- Less Overflow
+
+---
+
+# Multi-Class Classification
+
+Example
+
+```
+Cat
+
+Dog
+
+Horse
+
+Lion
+```
+
+Only one correct answer.
+
+Use
+
+```
+CrossEntropyLoss
+```
+
+---
+
+# CrossEntropyLoss
+
+Most popular classification loss.
+
+Used in
+
+- CNN
+- ResNet
+- Vision Transformer
+- Llama Classifiers
+- BERT Classification
+
+PyTorch
+
+```python
+criterion = nn.CrossEntropyLoss()
+```
+
+Example
+
+```python
+output = model(images)
+
+loss = criterion(output, labels)
+```
+
+Important
+
+Do **NOT** apply Softmax before `CrossEntropyLoss`.
+
+PyTorch applies it internally.
+
+---
+
+# Why No Softmax?
+
+Wrong
+
+```python
+output = torch.softmax(output)
+
+loss = criterion(output, labels)
+```
+
+Correct
+
+```python
+loss = criterion(output, labels)
+```
+
+---
+
+# NLLLoss
+
+Negative Log Likelihood Loss.
+
+Requires
+
+```
+LogSoftmax
+
+↓
+
+NLLLoss
+```
+
+PyTorch
+
+```python
+criterion = nn.NLLLoss()
+```
+
+---
+
+# KL Divergence Loss
+
+Measures
+
+Difference between
+
+two probability distributions.
+
+Used in
+
+- Knowledge Distillation
+- Variational Autoencoders
+- LLM Training
+- Reinforcement Learning
+
+PyTorch
+
+```python
+criterion = nn.KLDivLoss()
+```
+
+---
+
+# Choosing the Right Loss
+
+| Problem | Loss |
+|----------|------|
+| Regression | MSELoss |
+| Regression with Outliers | L1Loss |
+| Object Detection | SmoothL1Loss |
+| Binary Classification | BCEWithLogitsLoss |
+| Multi-Class Classification | CrossEntropyLoss |
+| Probability Distribution | KLDivLoss |
+
+---
+
+# Complete Example
+
+```python
+import torch
+import torch.nn as nn
+
+criterion = nn.CrossEntropyLoss()
+
+prediction = torch.tensor([
+    [2.1,1.2,0.5]
+])
+
+target = torch.tensor([0])
+
+loss = criterion(prediction,target)
+
+print(loss)
+```
+
+---
+
+# Training Loop
+
+```python
+for images, labels in train_loader:
+
+    optimizer.zero_grad()
+
+    outputs = model(images)
+
+    loss = criterion(outputs, labels)
+
+    loss.backward()
+
+    optimizer.step()
+```
+
+Loss is calculated
+
+every iteration.
+
+---
+
+# Visual Workflow
+
+```
+Images
+
+↓
+
+Model
+
+↓
+
+Prediction
+
+↓
+
+Loss Function
+
+↓
+
+Loss Value
+
+↓
+
+Backward
+
+↓
+
+Optimizer
+
+↓
+
+Updated Model
+```
+
+---
+
+# Best Practices
+
+✅ Use CrossEntropyLoss for multi-class classification.
+
+✅ Use BCEWithLogitsLoss for binary classification.
+
+✅ Use MSELoss for regression.
+
+✅ Don't apply Softmax before CrossEntropyLoss.
+
+✅ Match target shapes with predictions.
+
+---
+
+# Common Mistakes
+
+❌ Using MSELoss for classification.
+
+❌ Applying Softmax before CrossEntropyLoss.
+
+❌ Using BCELoss without Sigmoid.
+
+❌ Wrong target datatype.
+
+---
+
+# Summary
+
+- Loss functions measure prediction error.
+- Smaller loss indicates better predictions.
+- Regression and classification use different loss functions.
+- MSELoss is common for regression.
+- CrossEntropyLoss is standard for multi-class classification.
+- BCEWithLogitsLoss is preferred for binary classification.
+- Choosing the correct loss function is critical for successful training.
+
+---
+
+# 🎤 Interview Questions
+
+1. What is a loss function?
+2. Difference between loss and cost?
+3. Why do we need loss functions?
+4. Difference between MSELoss and L1Loss?
+5. Why is CrossEntropyLoss so popular?
+6. Why shouldn't we apply Softmax before CrossEntropyLoss?
+7. Difference between BCELoss and BCEWithLogitsLoss?
+8. What is KL Divergence?
+9. Which loss is used for regression?
+10. Which loss is used for binary classification?
+
+---
+
+# 📝 Exercises
+
+### Exercise 1
+
+Implement MSELoss on two tensors.
+
+---
+
+### Exercise 2
+
+Use CrossEntropyLoss on a dummy classifier.
+
+---
+
+### Exercise 3
+
+Compare BCELoss and BCEWithLogitsLoss.
+
+---
+
+### Exercise 4
+
+Train a simple Linear Regression model using MSELoss.
+
+---
+
+### Exercise 5
+
+Train a binary classifier using BCEWithLogitsLoss.
+
+---
